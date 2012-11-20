@@ -21,24 +21,6 @@
         android:layout_marginTop="28dp"
         android:text="@string/show_location" />
 
-    <SeekBar
-        android:id="@+id/longitudeSeekBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/btnShowLocation"
-        android:layout_marginTop="64dp" />
-
-    <TextView
-        android:id="@+id/longitudeTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/longitudeSeekBar"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="35dp"
-        android:text="@string/longitute"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
-
     <TextView
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
@@ -65,5 +47,64 @@
         android:layout_toLeftOf="@+id/btnShowLocation"
         android:text="@string/utc_time_label"
         android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <NumberPicker
+        android:id="@+id/gpsDegreesNumberPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView3"
+        android:layout_centerVertical="true" />
+
+    <NumberPicker
+        android:id="@+id/gpsMinutesNumberPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/utc_textView"
+        android:layout_alignTop="@+id/gpsDegreesNumberPicker" />
+
+    <NumberPicker
+        android:id="@+id/gpsNumberPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/gpsMinutesNumberPicker"
+        android:layout_toRightOf="@+id/btnShowLocation" />
+
+    <TextView
+        android:id="@+id/degreeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/gpsDegreesNumberPicker"
+        android:layout_alignLeft="@+id/gpsDegreesNumberPicker"
+        android:layout_marginBottom="18dp"
+        android:text="@string/degree_text_view" />
+
+    <TextView
+        android:id="@+id/minutestextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/degreeTextView"
+        android:layout_alignBottom="@+id/degreeTextView"
+        android:layout_alignLeft="@+id/utc_textView"
+        android:text="@string/minutes_text_view" />
+
+    <TextView
+        android:id="@+id/longitudeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/degreeTextView"
+        android:layout_alignLeft="@+id/degreeTextView"
+        android:layout_marginBottom="16dp"
+        android:text="@string/manual_gps"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/secondsTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/minutestextView"
+        android:layout_alignBottom="@+id/minutestextView"
+        android:layout_alignLeft="@+id/gpsNumberPicker"
+        android:layout_marginLeft="11dp"
+        android:text="@string/seconds_text_view" />
 
 </RelativeLayout>

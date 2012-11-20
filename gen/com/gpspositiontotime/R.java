@@ -16,13 +16,18 @@ public final class R {
     }
     public static final class id {
         public static final int btnShowLocation=0x7f070001;
-        public static final int longitudeSeekBar=0x7f070002;
-        public static final int longitudeTextView=0x7f070003;
-        public static final int menu_settings=0x7f070007;
+        public static final int degreeTextView=0x7f070008;
+        public static final int gpsDegreesNumberPicker=0x7f070005;
+        public static final int gpsMinutesNumberPicker=0x7f070006;
+        public static final int gpsNumberPicker=0x7f070007;
+        public static final int longitudeTextView=0x7f07000b;
+        public static final int menu_settings=0x7f07000c;
+        public static final int minutestextView=0x7f070009;
+        public static final int secondsTextView=0x7f07000a;
         public static final int textView1=0x7f070000;
-        public static final int textView2=0x7f070004;
-        public static final int textView3=0x7f070006;
-        public static final int utc_textView=0x7f070005;
+        public static final int textView2=0x7f070002;
+        public static final int textView3=0x7f070004;
+        public static final int utc_textView=0x7f070003;
     }
     public static final class layout {
         public static final int activity_android_gpspos_to_time=0x7f030000;
@@ -32,8 +37,11 @@ public final class R {
     }
     public static final class string {
         public static final int app_name=0x7f040000;
-        public static final int longitute=0x7f040005;
+        public static final int degree_text_view=0x7f040009;
+        public static final int manual_gps=0x7f040005;
         public static final int menu_settings=0x7f040001;
+        public static final int minutes_text_view=0x7f04000a;
+        public static final int seconds_text_view=0x7f04000b;
         public static final int show_location=0x7f040003;
         public static final int text_view_two=0x7f040006;
         public static final int title_activity_android_gpspos_to_time=0x7f040002;

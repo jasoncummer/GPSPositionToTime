@@ -5,9 +5,12 @@
     <string name="title_activity_android_gpspos_to_time">AndroidGPSPosToTime</string>
     <string name="show_location">Show Location</string>
     <string name="top_text">AndroidGPSTracking</string>
-    <string name="longitute">xx.xxxxxx</string>
+    <string name="manual_gps">Manual GPS</string>
     <string name="text_view_two">Clock Text</string>
     <string name="utc_clock">UTC Clock</string>
     <string name="utc_time_label">UTC Time</string>
+    <string name="degree_text_view">Degrees</string>
+    <string name="minutes_text_view">Minutes</string>
+    <string name="seconds_text_view">Seconds</string>
 
 </resources>
