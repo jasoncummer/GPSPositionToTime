@@ -31,7 +31,7 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
 	//GPSTracker class
 	GPSTracker gps;
 	long GPSTime = 0;
-	//int timeDelta;
+	
 	
 	private Handler mHandler = new Handler();
 	
@@ -66,22 +66,9 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
         
         text_view_two = (TextView) findViewById(R.id.textView2);
         utcTextView = (TextView) findViewById(R.id.utc_textView);
-        sbLongitudeSeekBar = (SeekBar) findViewById(R.id.longitudeSeekBar) ;
         longitudeTextView = (TextView) findViewById(R.id.longitudeTextView);
         
-        sbLongitudeSeekBar.setOnSeekBarChangeListener( new SeekBar.OnSeekBarChangeListener() {
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				//longitudeTextView.setText("SeekBar value is "+ progress);
-				fakeLongitude = progress;
-				
-				calcNewTime(progress);
-			}
-			public void onStopTrackingTouch(SeekBar seekBar) {}
-			public void onStartTrackingTouch(SeekBar seekBar) {}
-		});
         
-       
-       
         
     }// end function onCreate
     
@@ -90,28 +77,7 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
 		public void run() {
  		   
  		   Date date =  new Date();
- 		   long l = System.currentTimeMillis();
- 		   l -= ( (fakeLongitude *4 ) * 60 * 1000) ;
- 		   date.setTime(l);
- 		   
- 		   
- 		   // Set system time 
- 		   if (date.getSeconds() < 10) {
- 			   if (date.getMinutes() < 10 ){
- 				   text_view_two.setText("" + date.getHours() + ":0" + date.getMinutes() + ".0" + date.getSeconds() );
- 			   }else {
- 				   text_view_two.setText("" + date.getHours() + ":" + date.getMinutes() + ".0" + date.getSeconds() );
- 				   //setSystemTimeFunction
- 			   }
- 	       } else {
- 	    	   if (date.getMinutes() < 10 ){
- 	    		  text_view_two.setText("" + date.getHours() + ":0" + date.getMinutes() + "." + date.getSeconds());      
- 	    	   }else {
- 	    		  text_view_two.setText("" + date.getHours() + ":" + date.getMinutes() + "." + date.getSeconds());      
- 	    		  //setSystemTimeFunction
- 	    	   }
- 	       }
- 	     
+ 		   	     
  		   //set the UTC time
  		   //check if GPS enabled
  		   try {
@@ -120,8 +86,22 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
  				  GPSTime = gps.getGPSTime();
  				 System.out.println(GPSTime);
  				  date.setTime(GPSTime);
- 				  utcTextView.setText("" + date.getHours() + ":" + date.getMinutes() + "." + date.getSeconds());
- 				  	
+ 				  
+ 				 if (date.getSeconds() < 10) {
+ 					  if (date.getMinutes() < 10 ){
+ 						 utcTextView.setText("" + date.getHours() + ":0" + date.getMinutes() + ".0" + date.getSeconds() );
+ 					  }else {
+ 						 utcTextView.setText("" + date.getHours() + ":" + date.getMinutes() + ".0" + date.getSeconds() );
+ 						  //setSystemTimeFunction
+ 					   }
+ 			       } else {
+ 			    	   if (date.getMinutes() < 10 ){
+ 			    		  utcTextView.setText("" + date.getHours() + ":0" + date.getMinutes() + "." + date.getSeconds());      
+ 			    	   }else {
+ 			    		  utcTextView.setText("" + date.getHours() + ":" + date.getMinutes() + "." + date.getSeconds());      
+ 			    		  //setSystemTimeFunction
+ 			    	   }
+ 			       }
  			   }else {
  				   gps = new GPSTracker(AndroidGPSPosToTime.this);
  			   }
@@ -131,33 +111,32 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
  		   }
 			
  		   
+ 		  long l = GPSTime;
+		  l -= ( ((gps.getLongitude()*-1) *4 ) * 60 * 1000) ;
+		  date.setTime(l);
+		   
+		  // Set system time 
+		  if (date.getSeconds() < 10) {
+			  if (date.getMinutes() < 10 ){
+				  text_view_two.setText("" + date.getHours() + ":0" + date.getMinutes() + ".0" + date.getSeconds() );
+			  }else {
+				  text_view_two.setText("" + date.getHours() + ":" + date.getMinutes() + ".0" + date.getSeconds() );
+				  //setSystemTimeFunction
+			   }
+	       } else {
+	    	   if (date.getMinutes() < 10 ){
+	    		  text_view_two.setText("" + date.getHours() + ":0" + date.getMinutes() + "." + date.getSeconds());      
+	    	   }else {
+	    		  text_view_two.setText("" + date.getHours() + ":" + date.getMinutes() + "." + date.getSeconds());      
+	    		  //setSystemTimeFunction
+	    	   }
+	       }
+ 		   
+ 		   
  	       mHandler.postDelayed(mUpdateTimeTask, 1000);
  	   }
  	};
    
- 
-    public void calcNewTime(int longitude){
-		
-    	int timeDelta = longitude * 4;//<todo> double check conversion times for degrees
-    	
-		longitudeTextView.setText("longitude: "+ longitude + ", delta: " + timeDelta);
-		
-		//String timeString = DateFormat.getDateTimeInstance().format(new Date());
-		
-		//Calendar c = Calendar.getInstance();
-
-		Date date =  new Date();
-		long l = System.currentTimeMillis();
-		l -=  (timeDelta * 60 * 1000) ;
-		date.setTime(l);
-		
-		System.out.println(date);
-		
-		text_view_two.setText(date.toString());
-		
-		// 4min / degree
-    }
-
     /// this function is to set the rooted systems time 
     // will fail to set clock as the permissions on the file wont be correct 
     // other wise
