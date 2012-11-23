@@ -1,21 +1,19 @@
 package com.gpspositiontotime;
 
-//import java.text.DateFormat;
+
 import java.util.Calendar;
 import java.util.Date;
 
-//import com.gpspositiontotime.R.id;
 
 import android.os.Bundle;
 import android.os.Handler;
 import android.app.Activity;
-//import android.text.format.Time;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DigitalClock;
+import android.widget.NumberPicker;
 import android.widget.SeekBar;
-//import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,9 +23,10 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
 	SeekBar sbLongitudeSeekBar;
 	TextView longitudeTextView;
 	TextView utcTextView;
-	DigitalClock dg;
 	public TextView text_view_two;
-	
+	NumberPicker degrees;
+	NumberPicker minutes;
+	NumberPicker seconds;
 	//GPSTracker class
 	GPSTracker gps;
 	long GPSTime = 0;
@@ -42,16 +41,20 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_android_gpspos_to_time);
         
+        gps = new GPSTracker(AndroidGPSPosToTime.this);
+        
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
         
         // show location button click event
         btnShowLocation.setOnClickListener(new View.OnClickListener() {
-			
+		
 			public void onClick(View arg0) {
-				// create class object
-				gps = new GPSTracker(AndroidGPSPosToTime.this);
 				
-				//check if GPS enabled
+				// this will have to take the current values in the number pickers and make them into a time
+				// or 
+				// this could be a call to a menu/ view to set them - which I think is a better implementation...
+				
+				//check if GPS enabled 
 				if(gps.canGetLocation()){
 					double latitude = gps.getLatitude();
 					double longitude = gps.getLongitude();
@@ -59,14 +62,47 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
 					
 					// \n is for new line
 					Toast.makeText(getApplicationContext(), "Your Location is - \nLat: " + latitude + "\nLong: "  + longitude + "\nGPStime: " + GPStime, Toast.LENGTH_LONG).show();
+					
+					double degreestemp = gps.getLongitude();
+					
+					double minutestemp = degreestemp;
+					minutestemp -= (int)degreestemp ;
+					minutestemp = minutestemp * -1;
+					minutestemp = minutestemp * 60;
+					
+					
+					double secondstemp = minutestemp;
+					secondstemp -= (int)minutestemp;
+					secondstemp = secondstemp * 60;
+										
+					degrees.setValue(Math.abs((int)degreestemp));
+					
+					minutes.setValue((int)minutestemp);
+					  
+					seconds.setValue((int)secondstemp); 
+					
+
 				}
 				
 			}
 		} );
         
+        //setNumberPickerForDMS();
+        
         text_view_two = (TextView) findViewById(R.id.textView2);
         utcTextView = (TextView) findViewById(R.id.utc_textView);
         longitudeTextView = (TextView) findViewById(R.id.longitudeTextView);
+        degrees = (NumberPicker) findViewById(R.id.gpsDegreesNumberPicker);
+        degrees.setMaxValue(180);
+        degrees.setMinValue(0);
+        
+        minutes = (NumberPicker) findViewById(R.id.gpsMinutesNumberPicker);
+        minutes.setMaxValue(60);
+        minutes.setMinValue(0);
+        
+        seconds = (NumberPicker) findViewById(R.id.gpsSecondsNumberPicker);
+        seconds.setMaxValue(60);
+        seconds.setMinValue(0);
         
         
         
@@ -84,7 +120,7 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
  			   if( gps != null){
  				  gps.getLocation();
  				  GPSTime = gps.getGPSTime();
- 				 System.out.println(GPSTime);
+ 				 //System.out.println(GPSTime);
  				  date.setTime(GPSTime);
  				  
  				 if (date.getSeconds() < 10) {
@@ -136,6 +172,32 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
  	       mHandler.postDelayed(mUpdateTimeTask, 1000);
  	   }
  	};
+ 	
+ 	// sets the values for the degrees minutes and second number pickers
+ 	//if the gps has been instantiated
+ 	private void setNumberPickerForDMS(){
+ 		if(gps.canGetLocation()){
+			
+			double degreestemp = gps.getLongitude();
+			
+			double minutestemp = degreestemp;
+			minutestemp -= (int)degreestemp ;
+			minutestemp = minutestemp * -1;
+			minutestemp = minutestemp * 60;
+			
+			
+			double secondstemp = minutestemp;
+			secondstemp -= (int)minutestemp;
+			secondstemp = secondstemp * 60;
+			
+			degrees.setValue(Math.abs((int)degreestemp));
+			minutes.setValue((int)minutestemp);
+			seconds.setValue((int)secondstemp); 
+			
+			//ex 15.1258 (0.1258*60)/*mins*/= 7.548  .548*60 = 32.88/*secs*/ 
+
+		}
+ 	}
    
     /// this function is to set the rooted systems time 
     // will fail to set clock as the permissions on the file wont be correct 
@@ -161,11 +223,18 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
     		
     }// end function setSystemTimeFunction
 
+  
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_android_gpspos_to_time, menu);
         return true;
+    }
+    
+    @Override
+    public void onStart(){
+    	super.onStart();
+    	setNumberPickerForDMS();
     }
     
     // functions for application life cycle
@@ -180,6 +249,7 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
 		super.onResume();
 		mHandler.removeCallbacks(mUpdateTimeTask);
 		mHandler.postDelayed(mUpdateTimeTask, 1000);
+		setNumberPickerForDMS();
 	}
 	
 	@Override
@@ -193,6 +263,7 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
 		super.onRestart();
 		mHandler.removeCallbacks(mUpdateTimeTask);
 		mHandler.postDelayed(mUpdateTimeTask, 1000);
+		setNumberPickerForDMS();
 	}
     
 }
