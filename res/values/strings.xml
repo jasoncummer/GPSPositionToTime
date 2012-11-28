@@ -3,7 +3,7 @@
     <string name="app_name">GPSPositionToTime</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_android_gpspos_to_time">AndroidGPSPosToTime</string>
-    <string name="show_location">Show Location</string>
+    <string name="set_location">Set Location</string>
     <string name="top_text">AndroidGPSTracking</string>
     <string name="manual_gps">Manual GPS</string>
     <string name="text_view_two">Clock Text</string>

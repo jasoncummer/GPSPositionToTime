@@ -1,17 +1,21 @@
 package com.gpspositiontotime;
 
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
-import android.widget.DigitalClock;
 import android.widget.NumberPicker;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -60,28 +64,20 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
 					double longitude = gps.getLongitude();
 					long GPStime = gps.getGPSTime();
 					
-					// \n is for new line
-					Toast.makeText(getApplicationContext(), "Your Location is - \nLat: " + latitude + "\nLong: "  + longitude + "\nGPStime: " + GPStime, Toast.LENGTH_LONG).show();
 					
-					double degreestemp = gps.getLongitude();
+					double degreestemp = degrees.getValue();
 					
-					double minutestemp = degreestemp;
-					minutestemp -= (int)degreestemp ;
-					minutestemp = minutestemp * -1;
-					minutestemp = minutestemp * 60;
+					double minutestemp = minutes.getValue();
+					minutestemp = minutestemp / 60;
 					
 					
-					double secondstemp = minutestemp;
-					secondstemp -= (int)minutestemp;
-					secondstemp = secondstemp * 60;
-										
-					degrees.setValue(Math.abs((int)degreestemp));
+					double secondstemp = seconds.getValue(); 
+					secondstemp = secondstemp / 60;
 					
-					minutes.setValue((int)minutestemp);
-					  
-					seconds.setValue((int)secondstemp); 
+					//writeAlert("this will be a date, this one too!");
 					
-
+					// this is to kill the text recording function
+					mHandler.removeCallbacks(mRecordTimeInTextTask);
 				}
 				
 			}
@@ -168,10 +164,74 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
 	    	   }
 	       }
  		   
- 		   
+ 		   // updates the time every second
  	       mHandler.postDelayed(mUpdateTimeTask, 1000);
  	   }
  	};
+ 	
+ 	private Runnable mRecordTimeInTextTask = new Runnable() {
+  	   @SuppressWarnings("deprecation")
+ 		public void run() {
+  		   System.out.println("record text");
+  		   Date date =  new Date();
+  		   	     
+  		   //set the UTC time
+  		   //check if GPS enabled
+  		   try {
+  			   if( gps != null){
+  				  gps.getLocation();
+  				  GPSTime = gps.getGPSTime();
+  				 
+  				  date.setTime(GPSTime);
+  				  
+  				 if (date.getSeconds() < 10) {
+  					  if (date.getMinutes() < 10 ){
+  						  writeDate("" + date.getYear() + ", "+ date.getMonth()+", "+date.getDate() + ", " + date.getHours() + ":0" + date.getMinutes() + ".0" + date.getSeconds() + ";"  );
+  					  }else {
+  						  writeDate("" + date.getYear() + ", "+ date.getMonth()+", "+date.getDate() + ", " + date.getHours() + ":" + date.getMinutes() + ".0" + date.getSeconds() + ";" );
+  					  }
+  			       } else {
+  			    	   if (date.getMinutes() < 10 ){
+  			    		   writeDate("" + date.getYear() + ", "+ date.getMonth()+", "+date.getDate() + ", " + date.getHours() + ":0" + date.getMinutes() + "." + date.getSeconds() + ";");      
+  			    	   }else {
+  			    		   writeDate("" + date.getYear() + ", "+ date.getMonth()+", "+date.getDate() + ", " + date.getHours() + ":" + date.getMinutes() + "." + date.getSeconds() + ";");
+  			    	   }
+  			       }
+  			   }else {
+  				   gps = new GPSTracker(AndroidGPSPosToTime.this);
+  			   }
+  			   
+  		   }catch (Exception e){
+  			   System.out.println(e);
+  		   }
+ 			
+  		   
+  		  long l = GPSTime;
+ 		  l -= ( ((gps.getLongitude()*-1) *4 ) * 60 * 1000) ;
+ 		  date.setTime(l);
+ 		   
+ 		  // Set system time 
+ 		  if (date.getSeconds() < 10) {
+ 			  if (date.getMinutes() < 10 ){
+ 				 writeDate("\t" + date.getYear() + ", "+ date.getMonth()+", "+date.getDate() + ", " + date.getHours() + ":0" + date.getMinutes() + ".0" + date.getSeconds()+ "\n" );
+ 			  }else {
+ 				 writeDate("\t" + date.getYear() + ", "+ date.getMonth()+", "+date.getDate() + ", " + date.getHours() + ":" + date.getMinutes() + ".0" + date.getSeconds() + "\n");
+ 			   }
+ 	       } else {
+ 	    	   if (date.getMinutes() < 10 ){
+ 	    		  writeDate("\t" + date.getYear() + ", "+ date.getMonth()+", "+date.getDate() + ", " + date.getHours() + ":0" + date.getMinutes() + "." + date.getSeconds()+ "\n");      
+ 	    	   }else {
+ 	    		  writeDate("\t" + date.getYear() + ", "+ date.getMonth()+", "+date.getDate() + ", " + date.getHours() + ":" + date.getMinutes() + "." + date.getSeconds() + "\n");   
+ 	    	   }
+ 	       }
+  		   
+ 		  System.out.println("record text");
+ 		  
+ 		// writes to file every hour, hopefully the time changing doesn't affect this...
+  	       //mHandler.postDelayed(mRecordTimeInTextTask, 60000);
+ 		 mHandler.postDelayed(mRecordTimeInTextTask, 1000);
+  	   }
+  	};
  	
  	// sets the values for the degrees minutes and second number pickers
  	//if the gps has been instantiated
@@ -223,7 +283,21 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
     		
     }// end function setSystemTimeFunction
 
-  
+    @SuppressLint("SdCardPath")
+	public void writeDate(String message){
+    	System.out.println("writedata");
+    	File gpsTimeFile =  new File("/sdcard/gpsTimeFile.txt");
+    	FileWriter fw;
+    	try {
+    		fw = new FileWriter("/sdcard/gpsTimeFile.txt", true);
+    		fw.write(message);
+    		fw.flush();
+    		fw.close();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -235,13 +309,19 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
     public void onStart(){
     	super.onStart();
     	setNumberPickerForDMS();
+    	// need to set this up so that it only happens once
+    	mHandler.postDelayed(mRecordTimeInTextTask, 1000);
     }
     
     // functions for application life cycle
     @Override
 	public void onStop(){
 		super.onStop();
-		mHandler.removeCallbacks(mUpdateTimeTask);
+		mHandler.removeCallbacks(mUpdateTimeTask);// so I should keep this on if it will keep going
+		
+		// removed as the button is a good kill switch for now.
+		//mHandler.removeCallbacks(mRecordTimeInTextTask);// does it keep on going or does it dye when the program stops running... no it keeps going :)
+		
 	}
 	
 	@Override
