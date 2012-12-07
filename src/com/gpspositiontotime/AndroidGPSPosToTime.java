@@ -113,41 +113,83 @@ public class AndroidGPSPosToTime extends Activity {// implements
 					gps = new GPSTracker(AndroidGPSPosToTime.this);
 				}
 
+				
+				long l = GPSTime;
+				l -= (((gps.getLongitude() * -1) * 4) * 60 * 1000);
+				date.setTime(l);
+
+				// Set system time
+				if (date.getSeconds() < 10) {
+					if (date.getMinutes() < 10) {
+						boatTimeClockView.setText("" + date.getHours() + ":0"
+								+ date.getMinutes() + ".0" + date.getSeconds());
+					} else {
+						boatTimeClockView.setText("" + date.getHours() + ":"
+								+ date.getMinutes() + ".0" + date.getSeconds());
+					}
+
+					setSystemTimeFunction(l);
+				} else {
+					if (date.getMinutes() < 10) {
+						boatTimeClockView.setText("" + date.getHours() + ":0"
+								+ date.getMinutes() + "." + date.getSeconds());
+					} else {
+						boatTimeClockView.setText("" + date.getHours() + ":"
+								+ date.getMinutes() + "." + date.getSeconds());
+					}
+					setSystemTimeFunction(l);
+				}
+
+				
+				
+				
 			} catch (Exception e) {
 				System.out.println(e);
 			}
 
-			long l = GPSTime;
-			l -= (((gps.getLongitude() * -1) * 4) * 60 * 1000);
-			date.setTime(l);
-
-			// Set system time
-			if (date.getSeconds() < 10) {
-				if (date.getMinutes() < 10) {
-					boatTimeClockView.setText("" + date.getHours() + ":0"
-							+ date.getMinutes() + ".0" + date.getSeconds());
-				} else {
-					boatTimeClockView.setText("" + date.getHours() + ":"
-							+ date.getMinutes() + ".0" + date.getSeconds());
-				}
-
-				setSystemTimeFunction(l);
-			} else {
-				if (date.getMinutes() < 10) {
-					boatTimeClockView.setText("" + date.getHours() + ":0"
-							+ date.getMinutes() + "." + date.getSeconds());
-				} else {
-					boatTimeClockView.setText("" + date.getHours() + ":"
-							+ date.getMinutes() + "." + date.getSeconds());
-				}
-				setSystemTimeFunction(l);
-			}
-
+			
 			// updates the time every second
 			mHandler.postDelayed(mUpdateTimeTask, 1000);
 		}
 	};
 
+	/*
+	 * 
+	 */
+	private Runnable mSetSystemTime = new Runnable(){
+		
+		public void  run(){
+			Date date = new Date();
+			try {
+				
+				if (gps == null){
+					gps = new GPSTracker(AndroidGPSPosToTime.this);
+				}
+				
+				if (gps != null) {
+					gps.getLocation();
+					GPSTime = gps.getGPSTime();
+					date.setTime(GPSTime);
+
+					// adjust for longitude
+					long l = GPSTime;
+					l -= (((gps.getLongitude() * -1) * 4) * 60 * 1000);
+					date.setTime(l);
+					
+					
+					setSystemTimeFunction(l);
+				} 				
+				
+			} catch (Exception e) {
+				System.out.println(e);
+			}
+			
+			// At least every Twelve hours the system time should be set
+			mHandler.postDelayed(mSetSystemTime, 43200000);
+		}
+		
+	};
+	
 	/*
  	 * 
  	 */
@@ -269,23 +311,21 @@ public class AndroidGPSPosToTime extends Activity {// implements
 			minutes.setValue((int) minutestemp);
 			seconds.setValue((int) secondstemp);
 
-			// ex 15.1258 (0.1258*60)/*mins*/= 7.548 .548*60 = 32.88/*secs*/
+			// ex 15.1258 (0.1258*60)/*minutes*/= 7.548 .548*60 = 32.88/*seconds*/
 
 		}
 	}
 
 	/*
-	 * This function is to set the rooted systems time will fail to set clock as
+	 * This function needs a rooted device and the /dev/alarm file needs to be at
+	 * least 666 file permission - done with chmod 666 /dev/alarm.
+	 * 
+	 * With out a rooted systems system time will fail to set as
 	 * the permissions on the file won't be correct other wise.
 	 */
 	public void setSystemTimeFunction(long l) {// view needed if its a button
-		System.out.println("SetSystemTimeFunction");
+		//System.out.println("SetSystemTimeFunction");
 
-		Date date = new Date();
-		date.setTime(GPSTime);
-
-		// this needs a rooted device and the /dev/alarm file needs to be at
-		// least 666 file permission
 		if (android.os.SystemClock.setCurrentTimeMillis(l)) {
 			System.out.println("success Clock set");
 		} else {
@@ -299,8 +339,8 @@ public class AndroidGPSPosToTime extends Activity {// implements
      */
 	@SuppressLint("SdCardPath")
 	public void writeDate(String message) {
-		System.out.println("writedata");
-		File gpsTimeFile = new File("/sdcard/gpsTimeFile.txt");
+		//System.out.println("writedata");
+		
 		FileWriter fw;
 		try {
 			fw = new FileWriter("/sdcard/gpsTimeFile.txt", true);

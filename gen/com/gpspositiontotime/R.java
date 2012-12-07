@@ -15,10 +15,10 @@ public final class R {
         public static final int ic_launcher=0x7f020001;
     }
     public static final class id {
-        public static final int UseNumberPickerButton=0x7f07000a;
+        public static final int UseNumberPickerButton=0x7f070009;
         public static final int boatClockTextView=0x7f07000c;
         public static final int boatTimeTextView=0x7f07000d;
-        public static final int btnSetLocation=0x7f070009;
+        public static final int btnSetLocation=0x7f07000a;
         public static final int degreeTextView=0x7f070005;
         public static final int gpsDegreesNumberPicker=0x7f070004;
         public static final int gpsMinutesNumberPicker=0x7f070002;
