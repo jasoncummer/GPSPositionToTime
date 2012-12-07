@@ -4,22 +4,6 @@
     android:layout_height="match_parent" >
 
     <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:text="@string/top_text"
-        tools:context=".AndroidGPSPosToTime" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:text="@string/text_view_two" />
-
-    <TextView
         android:id="@+id/textView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -36,13 +20,6 @@
         android:layout_alignBottom="@+id/textView3"
         android:layout_toRightOf="@+id/textView3"
         android:text="@string/utc_clock" />
-
-    <NumberPicker
-        android:id="@+id/gpsSecondsNumberPicker"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/textView3"
-        android:layout_toRightOf="@+id/btnShowLocation" />
 
     <NumberPicker
         android:id="@+id/gpsMinutesNumberPicker"
@@ -91,7 +68,7 @@
         android:text="@string/minutes_text_view" />
 
     <Button
-        android:id="@+id/btnShowLocation"
+        android:id="@+id/btnSetLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/longitudeTextView"
@@ -99,5 +76,38 @@
         android:layout_toLeftOf="@+id/textView2"
         android:onClick="manualGPS"
         android:text="@string/set_location" />
+
+    <NumberPicker
+        android:id="@+id/gpsSecondsNumberPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/textView3"
+        android:layout_marginLeft="18dp"
+        android:layout_toRightOf="@+id/gpsMinutesNumberPicker" />
+
+    <TextView
+        android:id="@+id/boatTimeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/boatTimeTextView"
+        android:text="@string/boat_time" />
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/top_text"
+        tools:context=".AndroidGPSPosToTime" />
+
+    <TextView
+        android:id="@+id/boatClockTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/boat_time_textView" />
 
 </RelativeLayout>

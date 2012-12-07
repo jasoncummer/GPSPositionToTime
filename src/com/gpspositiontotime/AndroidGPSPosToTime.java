@@ -22,12 +22,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeListener {
-	Button btnShowLocation;
+	Button btnSetLocation;
 	
 	SeekBar sbLongitudeSeekBar;
 	TextView longitudeTextView;
 	TextView utcTextView;
-	public TextView text_view_two;
+	public TextView boatTimeClockView;
 	NumberPicker degrees;
 	NumberPicker minutes;
 	NumberPicker seconds;
@@ -47,10 +47,10 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
         
         gps = new GPSTracker(AndroidGPSPosToTime.this);
         
-        btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
+        btnSetLocation = (Button) findViewById(R.id.btnSetLocation);
         
         // show location button click event
-        btnShowLocation.setOnClickListener(new View.OnClickListener() {
+        btnSetLocation.setOnClickListener(new View.OnClickListener() {
 		
 			public void onClick(View arg0) {
 				
@@ -60,32 +60,33 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
 				
 				//check if GPS enabled 
 				if(gps.canGetLocation()){
-					double latitude = gps.getLatitude();
-					double longitude = gps.getLongitude();
-					long GPStime = gps.getGPSTime();
-					
-					
-					double degreestemp = degrees.getValue();
-					
-					double minutestemp = minutes.getValue();
-					minutestemp = minutestemp / 60;
-					
-					
-					double secondstemp = seconds.getValue(); 
-					secondstemp = secondstemp / 60;
-					
-					//writeAlert("this will be a date, this one too!");
-					
-					// this is to kill the text recording function
-					mHandler.removeCallbacks(mRecordTimeInTextTask);
+//					double latitude = gps.getLatitude();
+//					double longitude = gps.getLongitude();
+//					long GPStime = gps.getGPSTime();
+//					
+//					
+//					double degreestemp = degrees.getValue();
+//					
+//					double minutestemp = minutes.getValue();
+//					minutestemp = minutestemp / 60;
+//					
+//					
+//					double secondstemp = seconds.getValue(); 
+//					secondstemp = secondstemp / 60;
+//					
+//					//writeAlert("this will be a date, this one too!");
+//					
+//					// this is to kill the text recording function
+//					mHandler.removeCallbacks(mRecordTimeInTextTask);
 				}
 				
 			}
 		} );
         
+        
         //setNumberPickerForDMS();
         
-        text_view_two = (TextView) findViewById(R.id.textView2);
+        boatTimeClockView = (TextView) findViewById(R.id.boatClockTextView);
         utcTextView = (TextView) findViewById(R.id.utc_textView);
         longitudeTextView = (TextView) findViewById(R.id.longitudeTextView);
         degrees = (NumberPicker) findViewById(R.id.gpsDegreesNumberPicker);
@@ -124,14 +125,14 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
  						 utcTextView.setText("" + date.getHours() + ":0" + date.getMinutes() + ".0" + date.getSeconds() );
  					  }else {
  						 utcTextView.setText("" + date.getHours() + ":" + date.getMinutes() + ".0" + date.getSeconds() );
- 						  //setSystemTimeFunction
+ 						  
  					   }
  			       } else {
  			    	   if (date.getMinutes() < 10 ){
  			    		  utcTextView.setText("" + date.getHours() + ":0" + date.getMinutes() + "." + date.getSeconds());      
  			    	   }else {
  			    		  utcTextView.setText("" + date.getHours() + ":" + date.getMinutes() + "." + date.getSeconds());      
- 			    		  //setSystemTimeFunction
+ 			    		  
  			    	   }
  			       }
  			   }else {
@@ -150,18 +151,19 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
 		  // Set system time 
 		  if (date.getSeconds() < 10) {
 			  if (date.getMinutes() < 10 ){
-				  text_view_two.setText("" + date.getHours() + ":0" + date.getMinutes() + ".0" + date.getSeconds() );
+				  boatTimeClockView.setText("" + date.getHours() + ":0" + date.getMinutes() + ".0" + date.getSeconds() );
 			  }else {
-				  text_view_two.setText("" + date.getHours() + ":" + date.getMinutes() + ".0" + date.getSeconds() );
-				  //setSystemTimeFunction
+				  boatTimeClockView.setText("" + date.getHours() + ":" + date.getMinutes() + ".0" + date.getSeconds() );
 			   }
+
+			  setSystemTimeFunction(l);
 	       } else {
 	    	   if (date.getMinutes() < 10 ){
-	    		  text_view_two.setText("" + date.getHours() + ":0" + date.getMinutes() + "." + date.getSeconds());      
+	    		  boatTimeClockView.setText("" + date.getHours() + ":0" + date.getMinutes() + "." + date.getSeconds());      
 	    	   }else {
-	    		  text_view_two.setText("" + date.getHours() + ":" + date.getMinutes() + "." + date.getSeconds());      
-	    		  //setSystemTimeFunction
+	    		  boatTimeClockView.setText("" + date.getHours() + ":" + date.getMinutes() + "." + date.getSeconds());    
 	    	   }
+	    	   setSystemTimeFunction(l);
 	       }
  		   
  		   // updates the time every second
@@ -228,8 +230,8 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
  		  System.out.println("record text");
  		  
  		// writes to file every hour, hopefully the time changing doesn't affect this...
-  	       //mHandler.postDelayed(mRecordTimeInTextTask, 60000);
- 		 mHandler.postDelayed(mRecordTimeInTextTask, 1000);
+  	       mHandler.postDelayed(mRecordTimeInTextTask, 60000);
+ 		 //mHandler.postDelayed(mRecordTimeInTextTask, 1000);
   	   }
   	};
  	
@@ -262,18 +264,12 @@ public class AndroidGPSPosToTime extends Activity {//implements OnSeekBarChangeL
     /// this function is to set the rooted systems time 
     // will fail to set clock as the permissions on the file wont be correct 
     // other wise
-    public void setSystemTimeFunction(View v){// view needed if its a button
+    public void setSystemTimeFunction(long l){// view needed if its a button
+	    System.out.println("SetSystemTimeFunction");
     	
-    	Calendar c = Calendar.getInstance();
-    	Date d = c.getTime();
-    	long l = d.getTime();
-    	l -= 3*60*60*1000;
-    	
-    	Toast.makeText(this, d.toString() , Toast.LENGTH_LONG).show();
-    	
-    	
-    	System.out.println(l);
-    	
+    	Date date = new Date();
+		date.setTime(GPSTime);
+		
     	// this needs a rooted device and the /dev/alarm file needs to be at least 666 file permission
     	if(android.os.SystemClock.setCurrentTimeMillis(l)){
     		System.out.println("success Clock set");
