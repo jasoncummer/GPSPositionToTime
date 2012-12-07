@@ -67,16 +67,6 @@
         android:layout_alignLeft="@+id/gpsMinutesNumberPicker"
         android:text="@string/minutes_text_view" />
 
-    <Button
-        android:id="@+id/btnSetLocation"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/longitudeTextView"
-        android:layout_marginBottom="34dp"
-        android:layout_toLeftOf="@+id/textView2"
-        android:onClick="manualGPS"
-        android:text="@string/set_location" />
-
     <NumberPicker
         android:id="@+id/gpsSecondsNumberPicker"
         android:layout_width="wrap_content"
@@ -85,13 +75,23 @@
         android:layout_marginLeft="18dp"
         android:layout_toRightOf="@+id/gpsMinutesNumberPicker" />
 
-    <TextView
-        android:id="@+id/boatTimeTextView"
+    <Button
+        android:id="@+id/btnSetLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/boatTimeTextView"
-        android:text="@string/boat_time" />
+        android:layout_alignRight="@+id/gpsSecondsNumberPicker"
+        android:layout_centerVertical="true"
+        android:onClick="manualGPS"
+        android:text="@string/set_location" />
+
+    <Button
+        android:id="@+id/UseNumberPickerButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/btnSetLocation"
+        android:layout_marginRight="18dp"
+        android:layout_toLeftOf="@+id/minutestextView"
+        android:text="Button" />
 
     <TextView
         android:id="@+id/textView1"
@@ -107,7 +107,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/textView1"
         android:text="@string/boat_time_textView" />
+
+    <TextView
+        android:id="@+id/boatTimeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/boatClockTextView"
+        android:layout_alignBottom="@+id/boatClockTextView"
+        android:layout_toLeftOf="@+id/boatClockTextView"
+        android:text="@string/boat_time" />
 
 </RelativeLayout>
