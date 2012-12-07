@@ -76,22 +76,13 @@
         android:layout_toRightOf="@+id/gpsMinutesNumberPicker" />
 
     <Button
-        android:id="@+id/btnSetLocation"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/gpsSecondsNumberPicker"
-        android:layout_centerVertical="true"
-        android:onClick="manualGPS"
-        android:text="@string/set_location" />
-
-    <Button
         android:id="@+id/UseNumberPickerButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/btnSetLocation"
-        android:layout_marginRight="18dp"
         android:layout_toLeftOf="@+id/minutestextView"
-        android:text="Button" />
+        android:onClick="manualGPS"
+        android:text="@string/manual_gps" />
 
     <TextView
         android:id="@+id/textView1"
@@ -118,5 +109,15 @@
         android:layout_alignBottom="@+id/boatClockTextView"
         android:layout_toLeftOf="@+id/boatClockTextView"
         android:text="@string/boat_time" />
+
+    <Button
+        android:id="@+id/btnSetLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/longitudeTextView"
+        android:layout_alignRight="@+id/gpsSecondsNumberPicker"
+        android:layout_marginBottom="34dp"
+        android:onClick="setLocation"
+        android:text="@string/set_location" />
 
 </RelativeLayout>
