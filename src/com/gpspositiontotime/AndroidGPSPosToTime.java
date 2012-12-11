@@ -1,10 +1,7 @@
 package com.gpspositiontotime;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.Date;
 
 import android.os.Bundle;
@@ -24,7 +21,6 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	Button btnSetLocation;
 
 	SeekBar sbLongitudeSeekBar;
-	TextView longitudeTextView;
 	TextView utcTextView;
 	public TextView boatTimeClockView;
 	NumberPicker degrees;
@@ -32,10 +28,17 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	NumberPicker seconds;
 	GPSTracker gps;
 	long GPSTime = 0;
+	long lastKnownGPSTime = 0;
+	long currentTime = 0; 
 
 	private Handler mHandler = new Handler();
 
 	double fakeLongitude;
+	
+	// times are in milliseconds
+	private static long twelveHours =  43200000;
+	private static long oneHour =  3600000;
+	private static long oneSecond = 1000;
 
 	/*
 	 * (non-Javadoc)
@@ -52,8 +55,8 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		btnSetLocation = (Button) findViewById(R.id.btnSetLocation);
 
 		boatTimeClockView = (TextView) findViewById(R.id.boatClockTextView);
-		utcTextView = (TextView) findViewById(R.id.utc_textView);
-		longitudeTextView = (TextView) findViewById(R.id.longitudeTextView);
+		utcTextView = (TextView) findViewById(R.id.utc_clock_textView);
+
 		degrees = (NumberPicker) findViewById(R.id.gpsDegreesNumberPicker);
 		degrees.setMaxValue(180);
 		degrees.setMinValue(0);
@@ -75,17 +78,30 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		@SuppressWarnings("deprecation")
 		public void run() {
 
+			//System.out.println("mUpdateTimeTask");
+			
 			Date date = new Date();
 
-			// set the UTC time
-			// check if GPS enabled
 			try {
+				
+				// check if GPS enabled
 				if (gps != null) {
+					System.out.println("gps !null");
 					gps.getLocation();
 					GPSTime = gps.getGPSTime();
-					// System.out.println(GPSTime);
-					date.setTime(GPSTime);
-
+					
+					if (lastKnownGPSTime == GPSTime){
+						currentTime += 1000;
+					}else{
+						lastKnownGPSTime = GPSTime;
+						currentTime = GPSTime;
+					}
+					
+					// set UTC Clock
+					date.setTime(currentTime);
+					//date.setTime(GPSTime);
+					System.out.println("gmt "+date.toGMTString());
+					
 					if (date.getSeconds() < 10) {
 						if (date.getMinutes() < 10) {
 							utcTextView.setText("" + date.getHours() + ":0"
@@ -109,38 +125,35 @@ public class AndroidGPSPosToTime extends Activity {// implements
 
 						}
 					}
+				
+					// set boat time clock
+					long l = currentTime;
+					l -= (((gps.getLongitude() * -1) * 4) * 60 * 1000);
+					date.setTime(l);
+
+					// Set system time
+					if (date.getSeconds() < 10) {
+						if (date.getMinutes() < 10) {
+							boatTimeClockView.setText("" + date.getHours() + ":0"
+									+ date.getMinutes() + ".0" + date.getSeconds());
+						} else {
+							boatTimeClockView.setText("" + date.getHours() + ":"
+									+ date.getMinutes() + ".0" + date.getSeconds());
+						}
+					} else {
+						if (date.getMinutes() < 10) {
+							boatTimeClockView.setText("" + date.getHours() + ":0"
+									+ date.getMinutes() + "." + date.getSeconds());
+						} else {
+							boatTimeClockView.setText("" + date.getHours() + ":"
+									+ date.getMinutes() + "." + date.getSeconds());
+						}
+					}					
+					
 				} else {
 					gps = new GPSTracker(AndroidGPSPosToTime.this);
 				}
 
-				
-				long l = GPSTime;
-				l -= (((gps.getLongitude() * -1) * 4) * 60 * 1000);
-				date.setTime(l);
-
-				// Set system time
-				if (date.getSeconds() < 10) {
-					if (date.getMinutes() < 10) {
-						boatTimeClockView.setText("" + date.getHours() + ":0"
-								+ date.getMinutes() + ".0" + date.getSeconds());
-					} else {
-						boatTimeClockView.setText("" + date.getHours() + ":"
-								+ date.getMinutes() + ".0" + date.getSeconds());
-					}
-
-					setSystemTimeFunction(l);
-				} else {
-					if (date.getMinutes() < 10) {
-						boatTimeClockView.setText("" + date.getHours() + ":0"
-								+ date.getMinutes() + "." + date.getSeconds());
-					} else {
-						boatTimeClockView.setText("" + date.getHours() + ":"
-								+ date.getMinutes() + "." + date.getSeconds());
-					}
-					setSystemTimeFunction(l);
-				}
-
-				
 				
 				
 			} catch (Exception e) {
@@ -149,7 +162,9 @@ public class AndroidGPSPosToTime extends Activity {// implements
 
 			
 			// updates the time every second
-			mHandler.postDelayed(mUpdateTimeTask, 1000);
+			//mHandler.postDelayed(mUpdateTimeTask, 1000);
+			//test
+			mHandler.postDelayed(mUpdateTimeTask, oneSecond);
 		}
 	};
 
@@ -158,6 +173,9 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	 */
 	private Runnable mSetSystemTime = new Runnable(){
 		
+		/*
+		 * 
+		 */
 		public void  run(){
 			Date date = new Date();
 			try {
@@ -185,7 +203,10 @@ public class AndroidGPSPosToTime extends Activity {// implements
 			}
 			
 			// At least every Twelve hours the system time should be set
-			mHandler.postDelayed(mSetSystemTime, 43200000);
+			//mHandler.postDelayed(mSetSystemTime, twelveHours);
+			
+			//maybe every hour would be better as this would not leave them with an a half day of bad time???
+			mHandler.postDelayed(mSetSystemTime, oneHour);
 		}
 		
 	};
@@ -196,96 +217,92 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	private Runnable mRecordTimeInTextTask = new Runnable() {
 		@SuppressWarnings("deprecation")
 		public void run() {
-			System.out.println("record text");
-			Date date = new Date();
-
-			// set the UTC time
-			try {
-				// check if GPS enabled
-				if (gps != null) {
-					gps.getLocation();
-					GPSTime = gps.getGPSTime();
-
-					date.setTime(GPSTime);
-
-					if (date.getSeconds() < 10) {
-						if (date.getMinutes() < 10) {
-							writeDate("" + date.getYear() + ", "
-									+ date.getMonth() + ", " + date.getDate()
-									+ ", " + date.getHours() + ":0"
-									+ date.getMinutes() + ".0"
-									+ date.getSeconds() + ";");
-						} else {
-							writeDate("" + date.getYear() + ", "
-									+ date.getMonth() + ", " + date.getDate()
-									+ ", " + date.getHours() + ":"
-									+ date.getMinutes() + ".0"
-									+ date.getSeconds() + ";");
-						}
-					} else {
-						if (date.getMinutes() < 10) {
-							writeDate("" + date.getYear() + ", "
-									+ date.getMonth() + ", " + date.getDate()
-									+ ", " + date.getHours() + ":0"
-									+ date.getMinutes() + "."
-									+ date.getSeconds() + ";");
-						} else {
-							writeDate("" + date.getYear() + ", "
-									+ date.getMonth() + ", " + date.getDate()
-									+ ", " + date.getHours() + ":"
-									+ date.getMinutes() + "."
-									+ date.getSeconds() + ";");
-						}
-					}
-				} else {
-					gps = new GPSTracker(AndroidGPSPosToTime.this);
-				}
-
-				long l = GPSTime;
-				l -= (((gps.getLongitude() * -1) * 4) * 60 * 1000);
-				date.setTime(l);
-
-				// Set system time
-				if (date.getSeconds() < 10) {
-					if (date.getMinutes() < 10) {
-						writeDate("\t" + date.getYear() + ", "
-								+ date.getMonth() + ", " + date.getDate()
-								+ ", " + date.getHours() + ":0"
-								+ date.getMinutes() + ".0" + date.getSeconds()
-								+ "\n");
-					} else {
-						writeDate("\t" + date.getYear() + ", "
-								+ date.getMonth() + ", " + date.getDate()
-								+ ", " + date.getHours() + ":"
-								+ date.getMinutes() + ".0" + date.getSeconds()
-								+ "\n");
-					}
-				} else {
-					if (date.getMinutes() < 10) {
-						writeDate("\t" + date.getYear() + ", "
-								+ date.getMonth() + ", " + date.getDate()
-								+ ", " + date.getHours() + ":0"
-								+ date.getMinutes() + "." + date.getSeconds()
-								+ "\n");
-					} else {
-						writeDate("\t" + date.getYear() + ", "
-								+ date.getMonth() + ", " + date.getDate()
-								+ ", " + date.getHours() + ":"
-								+ date.getMinutes() + "." + date.getSeconds()
-								+ "\n");
-					}
-				}
-
-				System.out.println("record text");
-
-			} catch (Exception e) {
-				System.out.println(e);
-			}
-
-			// writes to file every hour, hopefully the time changing doesn't
-			// affect this...
-			mHandler.postDelayed(mRecordTimeInTextTask, 60000);
-			// mHandler.postDelayed(mRecordTimeInTextTask, 1000);
+//			System.out.println("record text");
+//			Date date = new Date();
+//
+//			// set the UTC time
+//			try {
+//				// check if GPS enabled
+//				if (gps != null) {
+//					gps.getLocation();
+//					GPSTime = gps.getGPSTime();
+//
+//					date.setTime(GPSTime);
+//
+//					if (date.getSeconds() < 10) {
+//						if (date.getMinutes() < 10) {
+//							writeDate("" + date.getYear() + ", "
+//									+ date.getMonth() + ", " + date.getDate()
+//									+ ", " + date.getHours() + ":0"
+//									+ date.getMinutes() + ".0"
+//									+ date.getSeconds() + ";");
+//						} else {
+//							writeDate("" + date.getYear() + ", "
+//									+ date.getMonth() + ", " + date.getDate()
+//									+ ", " + date.getHours() + ":"
+//									+ date.getMinutes() + ".0"
+//									+ date.getSeconds() + ";");
+//						}
+//					} else {
+//						if (date.getMinutes() < 10) {
+//							writeDate("" + date.getYear() + ", "
+//									+ date.getMonth() + ", " + date.getDate()
+//									+ ", " + date.getHours() + ":0"
+//									+ date.getMinutes() + "."
+//									+ date.getSeconds() + ";");
+//						} else {
+//							writeDate("" + date.getYear() + ", "
+//									+ date.getMonth() + ", " + date.getDate()
+//									+ ", " + date.getHours() + ":"
+//									+ date.getMinutes() + "."
+//									+ date.getSeconds() + ";");
+//						}
+//					}
+//				} else {
+//					gps = new GPSTracker(AndroidGPSPosToTime.this);
+//				}
+//
+//				long l = GPSTime;
+//				l -= (((gps.getLongitude() * -1) * 4) * 60 * 1000);
+//				date.setTime(l);
+//
+//				// Set system time
+//				if (date.getSeconds() < 10) {
+//					if (date.getMinutes() < 10) {
+//						writeDate("\t" + date.getYear() + ", "
+//								+ date.getMonth() + ", " + date.getDate()
+//								+ ", " + date.getHours() + ":0"
+//								+ date.getMinutes() + ".0" + date.getSeconds()
+//								+ "\n");
+//					} else {
+//						writeDate("\t" + date.getYear() + ", "
+//								+ date.getMonth() + ", " + date.getDate()
+//								+ ", " + date.getHours() + ":"
+//								+ date.getMinutes() + ".0" + date.getSeconds()
+//								+ "\n");
+//					}
+//				} else {
+//					if (date.getMinutes() < 10) {
+//						writeDate("\t" + date.getYear() + ", "
+//								+ date.getMonth() + ", " + date.getDate()
+//								+ ", " + date.getHours() + ":0"
+//								+ date.getMinutes() + "." + date.getSeconds()
+//								+ "\n");
+//					} else {
+//						writeDate("\t" + date.getYear() + ", "
+//								+ date.getMonth() + ", " + date.getDate()
+//								+ ", " + date.getHours() + ":"
+//								+ date.getMinutes() + "." + date.getSeconds()
+//								+ "\n");
+//					}
+//				}
+//			} catch (Exception e) {
+//				System.out.println(e);
+//			}
+//
+//			// writes to file every hour, hopefully the time changing doesn't
+//			// affect this...
+//			mHandler.postDelayed(mRecordTimeInTextTask, 60000);
 		}
 	};
 
@@ -353,6 +370,30 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		}
 	}
 
+	/*
+	 * 
+	 */
+	public void enableManualGPSEntry(View v){
+		Toast.makeText(this, "manualGPS", Toast.LENGTH_SHORT).show();
+	}
+	
+	/*
+	 * 
+	 */
+	public void manualSetTime(View v){
+		Toast.makeText(this, "manualSetTime" , Toast.LENGTH_SHORT).show();
+		mHandler.postDelayed(mSetSystemTime, 1000);
+		//gps.showSettingsAlert();// works
+	}
+	
+	/*
+	 * 
+	 */
+	public void setLocation(View v ){
+		Toast.makeText(this, "setLocation", Toast.LENGTH_SHORT).show();
+	}
+	
+	
 	// functions for application life cycle
 
 	/*
@@ -377,6 +418,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		setNumberPickerForDMS();
 		// need to set this up so that it only happens once
 		mHandler.postDelayed(mRecordTimeInTextTask, 1000);
+		mHandler.postDelayed(mSetSystemTime, 1000);
 	}
 
 	/*
@@ -435,3 +477,52 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	}
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -11,6 +11,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
+import android.widget.Toast;
 
 public class GPSTracker extends Service implements LocationListener{
 
@@ -21,6 +22,9 @@ public class GPSTracker extends Service implements LocationListener{
 	
 	//flag for network status
 	boolean isNetworkEnabled = false;
+	
+	// flag for passive provider
+	//boolean isPassiveProviderEnabled = false;
 	
 	boolean canGetLocation  = false;
 	
@@ -55,8 +59,15 @@ public class GPSTracker extends Service implements LocationListener{
 			// getting network status
 			isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 			
-			if(!isGPSEnabled && !isNetworkEnabled){
+			// getting passive provider service
+			//isPassiveProviderEnabled = locationManager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER);
+			
+			if(!isGPSEnabled ){//&& !isNetworkEnabled){
 				// no network provider is enabled
+				showSettingsAlert();
+				
+			}else if(!isGPSEnabled){
+				Toast.makeText(this,"not enabled", Toast.LENGTH_LONG).show();
 			}else{
 				this.canGetLocation = true;
 				// First get location from Network Provider
@@ -79,8 +90,7 @@ public class GPSTracker extends Service implements LocationListener{
 				if(isGPSEnabled){
 					if (location == null){
 						locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-															  MIN_TIME_BW_UPDATES,
-															  MIN_DISTANCE_CHANGE_FOR_UPDATES,
+															  MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES,
 															  this );
 						//Log.d("GPS Enabled","GPS Enabled");
 						if(locationManager != null){

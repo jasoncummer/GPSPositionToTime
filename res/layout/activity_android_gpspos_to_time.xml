@@ -4,60 +4,12 @@
     android:layout_height="match_parent" >
 
     <TextView
-        android:id="@+id/textView3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:text="@string/utc_time_label"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
-        android:id="@+id/utc_textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/textView3"
-        android:layout_alignBottom="@+id/textView3"
-        android:layout_toRightOf="@+id/textView3"
-        android:text="@string/utc_clock" />
-
-    <NumberPicker
-        android:id="@+id/gpsMinutesNumberPicker"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/gpsSecondsNumberPicker"
-        android:layout_centerHorizontal="true" />
-
-    <NumberPicker
-        android:id="@+id/gpsDegreesNumberPicker"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/textView3"
-        android:layout_alignTop="@+id/gpsMinutesNumberPicker" />
-
-    <TextView
-        android:id="@+id/degreeTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/gpsDegreesNumberPicker"
-        android:text="@string/degree_text_view" />
-
-    <TextView
         android:id="@+id/secondsTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/gpsSecondsNumberPicker"
         android:layout_alignLeft="@+id/gpsSecondsNumberPicker"
         android:text="@string/seconds_text_view" />
-
-    <TextView
-        android:id="@+id/longitudeTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/degreeTextView"
-        android:layout_toLeftOf="@+id/utc_textView"
-        android:text="@string/manual_gps"
-        android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <TextView
         android:id="@+id/minutestextView"
@@ -68,56 +20,95 @@
         android:text="@string/minutes_text_view" />
 
     <NumberPicker
-        android:id="@+id/gpsSecondsNumberPicker"
+        android:id="@+id/gpsDegreesNumberPicker"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/textView3"
-        android:layout_marginLeft="18dp"
-        android:layout_toRightOf="@+id/gpsMinutesNumberPicker" />
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/UseNumberPickerButton"
+        android:layout_marginTop="45dp" />
+
+    <TextView
+        android:id="@+id/utc_clock_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="@string/utc_clock" />
+
+    <NumberPicker
+        android:id="@+id/gpsMinutesNumberPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/gpsDegreesNumberPicker"
+        android:layout_toLeftOf="@+id/gpsSecondsNumberPicker" />
+
+    <TextView
+        android:id="@+id/degreeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/gpsMinutesNumberPicker"
+        android:layout_alignParentLeft="true"
+        android:text="@string/degree_text_view" />
+
+    <Button
+        android:id="@+id/btnSetLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/gpsDegreesNumberPicker"
+        android:layout_marginTop="30dp"
+        android:onClick="setLocation"
+        android:text="@string/set_location" />
 
     <Button
         android:id="@+id/UseNumberPickerButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/btnSetLocation"
-        android:layout_toLeftOf="@+id/minutestextView"
-        android:onClick="manualGPS"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/setTimeButton"
+        android:layout_marginTop="24dp"
+        android:onClick="enableManualGPSEntry"
         android:text="@string/manual_gps" />
 
-    <TextView
-        android:id="@+id/textView1"
+    <NumberPicker
+        android:id="@+id/gpsSecondsNumberPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/btnSetLocation"
+        android:layout_alignParentRight="true" />
+
+    <Button
+        android:id="@+id/setTimeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:text="@string/top_text"
-        tools:context=".AndroidGPSPosToTime" />
+        android:layout_below="@+id/boatTimeTextView"
+        android:onClick="manualSetTime"
+        android:text="@string/set_time_button_text" />
 
     <TextView
         android:id="@+id/boatClockTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/textView1"
+        android:layout_alignParentTop="true"
         android:text="@string/boat_time_textView" />
+
+    <TextView
+        android:id="@+id/boat_clock_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="@string/utc_time_label"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
         android:id="@+id/boatTimeTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/boatClockTextView"
-        android:layout_alignBottom="@+id/boatClockTextView"
-        android:layout_toLeftOf="@+id/boatClockTextView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
         android:text="@string/boat_time" />
-
-    <Button
-        android:id="@+id/btnSetLocation"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/longitudeTextView"
-        android:layout_alignRight="@+id/gpsSecondsNumberPicker"
-        android:layout_marginBottom="34dp"
-        android:onClick="setLocation"
-        android:text="@string/set_location" />
 
 </RelativeLayout>
