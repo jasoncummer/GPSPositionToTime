@@ -19,16 +19,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-//import com.googlecode.android_scripting.AsyncTaskListener;
-//import com.googlecode.android_scripting.FileUtils;
-//import com.googlecode.android_scripting.InterpreterInstaller;
-//import com.googlecode.android_scripting.InterpreterUninstaller;
-//import com.googlecode.android_scripting.Log;
-//import com.googlecode.android_scripting.activity.Main;
-//import com.googlecode.android_scripting.exception.Sl4aException;
-//import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
-//import com.googlecode.android_scripting.interpreter.InterpreterUtils;
-
 public class AndroidGPSPosToTime extends Activity {// implements
 													// OnSeekBarChangeListener {
 	// UI widgets
@@ -400,16 +390,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	 */
 	public void manualSetTime(View v){
 		Toast.makeText(this, "manualSetTime" , Toast.LENGTH_SHORT).show();
-		File alarmFile = new File("/dev/alarm");
-		try {
-			chmod(alarmFile, 666);
-		} catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-		}catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		chmodAlarmFile();
 		mHandler.postDelayed(mSetSystemTime, oneSecond);
 		
 	}
@@ -425,24 +406,24 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	//
 	
 	/*
-	 * NON_ FUNCTIONAL AT THE MOMENT - not needed
+	 * Calls the function that changes the file permissions on /dev/alarm to 666
 	 * Function requires su, so needs to be rooted. 
-	 * Changes the file permissions on /dev/alarm to 666
 	 * This allows the program to change the time when it needs to.
 	 */
 	public void chmodAlarmFile() {
        
 		System.out.println("ChmodAlarmFile Function called");
 		
-//            try {
-//              File out = new File(InterpreterUtils.getInterpreterRoot(PythonMain.this), "lib/python2.6/site-packages/" + mModule + ".pth");
-//              FileUtils.chmod(out, 0755);
-//            } catch (FileNotFoundException e) {
-//              e.printStackTrace();
-//            } catch (Exception e) {
-//              e.printStackTrace();
-//            }
-          
+		File alarmFile = new File("/dev/alarm");
+		try {
+			chmod(alarmFile, 666);
+		} catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+		}catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}          
     }
 
 	/*
