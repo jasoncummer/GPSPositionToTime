@@ -1,7 +1,10 @@
 package com.gpspositiontotime;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Date;
 
 import android.os.Bundle;
@@ -16,31 +19,48 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+//import com.googlecode.android_scripting.AsyncTaskListener;
+//import com.googlecode.android_scripting.FileUtils;
+//import com.googlecode.android_scripting.InterpreterInstaller;
+//import com.googlecode.android_scripting.InterpreterUninstaller;
+//import com.googlecode.android_scripting.Log;
+//import com.googlecode.android_scripting.activity.Main;
+//import com.googlecode.android_scripting.exception.Sl4aException;
+//import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
+//import com.googlecode.android_scripting.interpreter.InterpreterUtils;
+
 public class AndroidGPSPosToTime extends Activity {// implements
 													// OnSeekBarChangeListener {
+	// UI widgets
 	Button btnSetLocation;
-
 	SeekBar sbLongitudeSeekBar;
 	TextView utcTextView;
 	public TextView boatTimeClockView;
 	NumberPicker degrees;
 	NumberPicker minutes;
 	NumberPicker seconds;
+	private Handler mHandler = new Handler();
+	
+	// spacetime variables
 	GPSTracker gps;
 	long GPSTime = 0;
 	long lastKnownGPSTime = 0;
 	long currentTime = 0; 
-
-	private Handler mHandler = new Handler();
-
 	double fakeLongitude;
 	
-	// times are in milliseconds
+	// times in milliseconds
 	private static long twelveHours =  43200000;
 	private static long oneHour =  3600000;
 	private static long oneSecond = 1000;
+	
+	// time mulitpliers
 	private static int oneMinuteInSeconds = 60;
+	private static int oneHourInSeconds = 60;
+	private static int oneDayInHours = 24;
 
+	// other multipliers
+	private static int invertSign = -1;
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -129,7 +149,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 				
 					// set boat time clock
 					long l = currentTime;
-					l -= (((gps.getLongitude() * -1) * 4) * 60 * oneSecond);
+					l -= (((gps.getLongitude() * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
 					date.setTime(l);
 
 					// Set system time
@@ -163,8 +183,6 @@ public class AndroidGPSPosToTime extends Activity {// implements
 
 			
 			// updates the time every second
-			//mHandler.postDelayed(mUpdateTimeTask, 1000);
-			//test
 			mHandler.postDelayed(mUpdateTimeTask, oneSecond);
 		}
 	};
@@ -264,7 +282,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 				}
 
 				long l = GPSTime;
-				l -= (((gps.getLongitude() * -1) * 4) * oneMinuteInSeconds * oneSecond);
+				l -= (((gps.getLongitude() * invertSign) * 4) * oneMinuteInSeconds * oneSecond);
 				date.setTime(l);
 
 				// Set system time
@@ -318,7 +336,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 
 			double minutestemp = degreestemp;
 			minutestemp -= (int) degreestemp;
-			minutestemp = minutestemp * -1;
+			minutestemp = minutestemp * invertSign;
 			minutestemp = minutestemp * 60;
 
 			double secondstemp = minutestemp;
@@ -366,7 +384,6 @@ public class AndroidGPSPosToTime extends Activity {// implements
 			fw.flush();
 			fw.close();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	}
@@ -383,8 +400,18 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	 */
 	public void manualSetTime(View v){
 		Toast.makeText(this, "manualSetTime" , Toast.LENGTH_SHORT).show();
+		File alarmFile = new File("/dev/alarm");
+		try {
+			chmod(alarmFile, 666);
+		} catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+		}catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		mHandler.postDelayed(mSetSystemTime, oneSecond);
-		//gps.showSettingsAlert();// works
+		
 	}
 	
 	/*
@@ -393,6 +420,51 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	public void setLocation(View v ){
 		Toast.makeText(this, "setLocation", Toast.LENGTH_SHORT).show();
 	}
+	
+	
+	//
+	
+	/*
+	 * NON_ FUNCTIONAL AT THE MOMENT - not needed
+	 * Function requires su, so needs to be rooted. 
+	 * Changes the file permissions on /dev/alarm to 666
+	 * This allows the program to change the time when it needs to.
+	 */
+	public void chmodAlarmFile() {
+       
+		System.out.println("ChmodAlarmFile Function called");
+		
+//            try {
+//              File out = new File(InterpreterUtils.getInterpreterRoot(PythonMain.this), "lib/python2.6/site-packages/" + mModule + ".pth");
+//              FileUtils.chmod(out, 0755);
+//            } catch (FileNotFoundException e) {
+//              e.printStackTrace();
+//            } catch (Exception e) {
+//              e.printStackTrace();
+//            }
+          
+    }
+
+	/*
+	 * Sets the file permission on the /dev/alarm file 
+	 * Needs to be rooted 
+	 * This function works
+	 * http://stackoverflow.com/questions/11408154/how-to-get-file-permission-mode-programmatically-in-java
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public int chmod(File path, int mode) throws Exception {
+		System.out.println("chmod Function");
+		try{
+		Class fileUtils = Class.forName("android.os.FileUtils");
+		Method setPermissions = fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
+		return (Integer) setPermissions.invoke(null, path.getAbsolutePath(), mode, -1, -1);
+		}catch(Exception e){
+			System.out.println("Error: " + e);
+			return -1;
+		}
+		
+	}
+
 	
 	
 	// functions for application life cycle
