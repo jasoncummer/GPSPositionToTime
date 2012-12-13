@@ -24,8 +24,9 @@ public final class R {
         public static final int gpsDegreesNumberPicker=0x7f070004;
         public static final int gpsMinutesNumberPicker=0x7f070003;
         public static final int gpsSecondsNumberPicker=0x7f070001;
-        public static final int menu_settings=0x7f07000d;
-        public static final int minutestextView=0x7f070002;
+        public static final int manualGPSInUseTextView=0x7f07000d;
+        public static final int menu_settings=0x7f07000e;
+        public static final int minutesTextView=0x7f070002;
         public static final int secondsTextView=0x7f070000;
         public static final int setTimeButton=0x7f070009;
         public static final int utc_clock_textView=0x7f070006;
@@ -42,6 +43,7 @@ public final class R {
         public static final int boat_time_textView=0x7f040007;
         public static final int degree_text_view=0x7f04000a;
         public static final int manual_gps=0x7f040005;
+        public static final int manual_gps_on_off_text_view=0x7f04000e;
         public static final int menu_settings=0x7f040001;
         public static final int minutes_text_view=0x7f04000b;
         public static final int seconds_text_view=0x7f04000c;

@@ -14,5 +14,6 @@
     <string name="minutes_text_view">Minutes</string>
     <string name="seconds_text_view">Seconds</string>
     <string name="set_time_button_text">Set Time</string>
+    <string name="manual_gps_on_off_text_view">Manual GPS: Not in use</string>
 
 </resources>

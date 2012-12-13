@@ -23,27 +23,33 @@ public class AndroidGPSPosToTime extends Activity {// implements
 													// OnSeekBarChangeListener {
 	// UI widgets
 	Button btnSetLocation;
+	Button btnUseNumberPickerButton;
 	SeekBar sbLongitudeSeekBar;
 	TextView utcTextView;
-	public TextView boatTimeClockView;
+	TextView boatTimeClockView;
+	TextView manualGPSInUseTextView;
 	NumberPicker degrees;
 	NumberPicker minutes;
 	NumberPicker seconds;
 	private Handler mHandler = new Handler();
+	
+	// booleans
+	private boolean showManualGPS = false;
+	private boolean useManualGPS = false;
 	
 	// spacetime variables
 	GPSTracker gps;
 	long GPSTime = 0;
 	long lastKnownGPSTime = 0;
 	long currentTime = 0; 
-	double fakeLongitude;
+	double manualLongitude;
 	
 	// times in milliseconds
 	private static long twelveHours =  43200000;
 	private static long oneHour =  3600000;
 	private static long oneSecond = 1000;
 	
-	// time mulitpliers
+	// time multipliers
 	private static int oneMinuteInSeconds = 60;
 	private static int oneHourInSeconds = 60;
 	private static int oneDayInHours = 24;
@@ -64,20 +70,22 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		gps = new GPSTracker(AndroidGPSPosToTime.this);
 
 		btnSetLocation = (Button) findViewById(R.id.btnSetLocation);
+		btnUseNumberPickerButton = (Button) findViewById(R.id.UseNumberPickerButton);
 
 		boatTimeClockView = (TextView) findViewById(R.id.boatClockTextView);
 		utcTextView = (TextView) findViewById(R.id.utc_clock_textView);
+		manualGPSInUseTextView = (TextView) findViewById(R.id.manualGPSInUseTextView);
 
 		degrees = (NumberPicker) findViewById(R.id.gpsDegreesNumberPicker);
 		degrees.setMaxValue(180);
 		degrees.setMinValue(0);
 
 		minutes = (NumberPicker) findViewById(R.id.gpsMinutesNumberPicker);
-		minutes.setMaxValue(60);
+		minutes.setMaxValue(59);
 		minutes.setMinValue(0);
 
 		seconds = (NumberPicker) findViewById(R.id.gpsSecondsNumberPicker);
-		seconds.setMaxValue(60);
+		seconds.setMaxValue(59);
 		seconds.setMinValue(0);
 
 	}// end function onCreate
@@ -97,12 +105,11 @@ public class AndroidGPSPosToTime extends Activity {// implements
 				
 				// check if GPS enabled
 				if (gps != null) {
-					System.out.println("gps !null");
 					gps.getLocation();
 					GPSTime = gps.getGPSTime();
 					
 					if (lastKnownGPSTime == GPSTime){
-						currentTime += 1000;
+						currentTime += oneSecond;
 					}else{
 						lastKnownGPSTime = GPSTime;
 						currentTime = GPSTime;
@@ -111,7 +118,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 					// set UTC Clock
 					date.setTime(currentTime);
 					//date.setTime(GPSTime);
-					System.out.println("gmt "+date.toGMTString());
+					//System.out.println("gmt "+date.toGMTString());// prints start of epoc time if there is no lock this is not good and should have something to fix this.
 					
 					if (date.getSeconds() < 10) {
 						if (date.getMinutes() < 10) {
@@ -139,7 +146,11 @@ public class AndroidGPSPosToTime extends Activity {// implements
 				
 					// set boat time clock
 					long l = currentTime;
-					l -= (((gps.getLongitude() * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
+					if (!useManualGPS){
+						l -= (((gps.getLongitude() * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
+					}else{
+						l -= (((manualLongitude * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
+					}
 					date.setTime(l);
 
 					// Set system time
@@ -186,29 +197,37 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		 * 
 		 */
 		public void  run(){
-			Date date = new Date();
-			try {
+			
+			if (useManualGPS){
+				stillUsingManualGPS();
+			}else{
+				// set the file permissions on /dev/alarm file to 666
+				chmodAlarmFile();			
 				
-				if (gps == null){
-					gps = new GPSTracker(AndroidGPSPosToTime.this);
+				Date date = new Date();
+				try {
+					
+					if (gps == null){
+						gps = new GPSTracker(AndroidGPSPosToTime.this);
+					}
+					
+					if (gps != null) {
+						gps.getLocation();
+						GPSTime = gps.getGPSTime();
+						date.setTime(GPSTime);
+	
+						// adjust for longitude
+						long l = GPSTime;
+						l -= (((gps.getLongitude() * -1) * 4) * oneMinuteInSeconds * oneSecond);
+						date.setTime(l);
+						
+						
+						setSystemTimeFunction(l);
+					} 				
+					
+				} catch (Exception e) {
+					System.out.println(e);
 				}
-				
-				if (gps != null) {
-					gps.getLocation();
-					GPSTime = gps.getGPSTime();
-					date.setTime(GPSTime);
-
-					// adjust for longitude
-					long l = GPSTime;
-					l -= (((gps.getLongitude() * -1) * 4) * oneMinuteInSeconds * oneSecond);
-					date.setTime(l);
-					
-					
-					setSystemTimeFunction(l);
-				} 				
-				
-			} catch (Exception e) {
-				System.out.println(e);
 			}
 			
 			// At least every Twelve hours the system time should be set
@@ -219,6 +238,13 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		}
 		
 	};
+	
+	/*
+	 * 
+	 */
+	public void stillUsingManualGPS(){
+		Toast.makeText(this, "Still using Manual GPS, disable to test automatic time setting", Toast.LENGTH_LONG).show();
+	}
 	
 	/*
  	 * 
@@ -272,7 +298,11 @@ public class AndroidGPSPosToTime extends Activity {// implements
 				}
 
 				long l = GPSTime;
-				l -= (((gps.getLongitude() * invertSign) * 4) * oneMinuteInSeconds * oneSecond);
+				if (!useManualGPS){
+					l -= (((gps.getLongitude() * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
+				}else{
+					l -= (((manualLongitude * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
+				}
 				date.setTime(l);
 
 				// Set system time
@@ -382,8 +412,17 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	 * 
 	 */
 	public void enableManualGPSEntry(View v){
-		Toast.makeText(this, "manualGPS", Toast.LENGTH_SHORT).show();
+		//Toast.makeText(this, "manualGPS", Toast.LENGTH_SHORT).show();
+		if (showManualGPS){
+			//cancel
+			hideManualGPS();
+			showManualGPS = false;
+		}else{
+			showManualGps();
+			showManualGPS = true;
+		}
 	}
+	
 	
 	/*
 	 * 
@@ -395,13 +434,93 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		
 	}
 	
+	
 	/*
 	 * 
 	 */
 	public void setLocation(View v ){
-		Toast.makeText(this, "setLocation", Toast.LENGTH_SHORT).show();
+		//Toast.makeText(this, "setLocation", Toast.LENGTH_SHORT).show();
+		
+		hideManualGPS();
+		
+		if (!useManualGPS){
+			useManualGPS = true;
+			manualGPSInUseTextView.setText("Manual GPS: Enabled");
+			Toast.makeText(this, "Using Manual GPS ", Toast.LENGTH_LONG).show();
+			btnSetLocation.setEnabled(true);
+			btnSetLocation.setVisibility(View.VISIBLE);
+			btnSetLocation.setText("Cancel Manual GPS");
+		}else{
+			useManualGPS = false;
+			manualGPSInUseTextView.setText("Manual GPS: Not in use");
+			btnSetLocation.setText("Enable Manual GPS");
+			showManualGPS = false;
+		}
+		
+		
 	}
 	
+	/*
+	 * 
+	 */
+	private void hideManualGPS(){
+		//
+		btnUseNumberPickerButton.setText("Enable Manual GPS Entry");
+		
+		//
+		btnSetLocation.setEnabled(false);
+		btnSetLocation.setVisibility(View.GONE);
+		
+		// number pickers
+		degrees.setEnabled(false);
+		degrees.setVisibility(View.GONE);
+		minutes.setEnabled(false);
+		minutes.setVisibility(View.GONE);
+		seconds.setEnabled(false);
+		seconds.setVisibility(View.GONE);
+		
+		// number picker labels
+		findViewById(R.id.degreeTextView).setEnabled(false);
+		findViewById(R.id.degreeTextView).setVisibility(View.GONE);
+		findViewById(R.id.minutesTextView).setEnabled(false);
+		findViewById(R.id.minutesTextView).setVisibility(View.GONE);
+		findViewById(R.id.secondsTextView).setEnabled(false);
+		findViewById(R.id.secondsTextView).setVisibility(View.GONE);
+		
+		//manual GPS in use TextView
+		findViewById(R.id.manualGPSInUseTextView).setVisibility(View.VISIBLE);
+	}
+	
+	
+	/*
+	 * 
+	 */
+	private void showManualGps(){
+		btnSetLocation.setEnabled(true);
+		btnSetLocation.setVisibility(View.VISIBLE);
+		
+		btnUseNumberPickerButton.setText("Cancel Manual GPS Entry");
+		
+		// number pickers 
+		degrees.setEnabled(true);
+		degrees.setVisibility(View.VISIBLE);
+		minutes.setEnabled(true);
+		minutes.setVisibility(View.VISIBLE);
+		seconds.setEnabled(true);
+		seconds.setVisibility(View.VISIBLE);
+		
+		// number picker labels
+		findViewById(R.id.degreeTextView).setEnabled(true);
+		findViewById(R.id.degreeTextView).setVisibility(View.VISIBLE);
+		findViewById(R.id.minutesTextView).setEnabled(true);
+		findViewById(R.id.minutesTextView).setVisibility(View.VISIBLE);
+		findViewById(R.id.secondsTextView).setEnabled(true);
+		findViewById(R.id.secondsTextView).setVisibility(View.VISIBLE);
+		
+		//manual GPS in use TextView
+		findViewById(R.id.manualGPSInUseTextView).setVisibility(View.GONE);
+		
+	}
 	
 	//
 	
@@ -416,7 +535,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		
 		File alarmFile = new File("/dev/alarm");
 		try {
-			chmod(alarmFile, 666);
+			System.out.println("Chemod Returns: " + chmod(alarmFile, 666) );
 		} catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -431,13 +550,20 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	 * Needs to be rooted 
 	 * This function works
 	 * http://stackoverflow.com/questions/11408154/how-to-get-file-permission-mode-programmatically-in-java
+	 * 
+	 * @param file you want to have permissions changed on.
+	 * @param int the permissions you want to bestow on the file
+	 * @returns 1 for success, or -1 for fail.
+	 * 
+	 * @see http://hi-android.info/src/android/os/FileUtils.java.html
+	 * @see http://code.google.com/p/python-for-android/source/browse/android/Utils/src/com/googlecode/android_scripting/FileUtils.java?r=8bd1254c181b9a2caba52a9e1b34074b93c77d37
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public int chmod(File path, int mode) throws Exception {
 		System.out.println("chmod Function");
 		try{
-		Class fileUtils = Class.forName("android.os.FileUtils");
+		Class<?> fileUtils = Class.forName("android.os.FileUtils");
 		Method setPermissions = fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
+			// public static native int setPermissions(String file, int mode, int uid, int gid);
 		return (Integer) setPermissions.invoke(null, path.getAbsolutePath(), mode, -1, -1);
 		}catch(Exception e){
 			System.out.println("Error: " + e);
@@ -446,6 +572,32 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		
 	}
 
+	/*
+	 * gets the permissions for a file 
+	 * @param file you want to find permissions for.
+	 * @returns int success, or -1 for fail
+	 * 
+	 * @see http://hi-android.info/src/android/os/FileUtils.java.html
+	 * @see http://code.google.com/p/python-for-android/source/browse/android/Utils/src/com/googlecode/android_scripting/FileUtils.java?r=8bd1254c181b9a2caba52a9e1b34074b93c77d37
+	 */
+	private int getFilePermissions(File path){
+		System.out.println("getFilePermissions Function");
+		int[] returnedPermissions = new int[1];
+		try {
+			Class<?> fileUtils = Class.forName("android.os.FileUtils");
+			Method getPermissions = fileUtils.getMethod("getPermissions", String.class, int[].class);
+				//  public static native int getPermissions(String file, int[] outPermissions);
+			getPermissions.invoke(null, path.getAbsolutePath(), returnedPermissions);
+			
+			for (int i = 0 ; i < returnedPermissions.length; i++){
+				System.out.println("in for: "+returnedPermissions[i]);
+			}
+			return returnedPermissions[0];
+		}catch (Exception e){
+			System.out.println(e);
+			return -1;
+		}
+	}
 	
 	
 	// functions for application life cycle
@@ -473,6 +625,8 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		// need to set this up so that it only happens once
 		mHandler.postDelayed(mRecordTimeInTextTask, oneSecond);
 		mHandler.postDelayed(mSetSystemTime, oneSecond);
+		
+		hideManualGPS();
 	}
 
 	/*
@@ -504,6 +658,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		mHandler.removeCallbacks(mUpdateTimeTask);
 		mHandler.postDelayed(mUpdateTimeTask, oneSecond);
 		setNumberPickerForDMS();
+		hideManualGPS();
 	}
 
 	/*
@@ -528,29 +683,10 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		mHandler.removeCallbacks(mUpdateTimeTask);
 		mHandler.postDelayed(mUpdateTimeTask, oneSecond);
 		setNumberPickerForDMS();
+		hideManualGPS();
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
