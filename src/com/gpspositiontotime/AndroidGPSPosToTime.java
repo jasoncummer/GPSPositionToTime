@@ -43,10 +43,12 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	long lastKnownGPSTime = 0;
 	long currentTime = 0; 
 	double manualLongitude;
+	private static int startingYearOfVoyage = 112; 
 	
 	// times in milliseconds
 	private static long twelveHours =  43200000;
 	private static long oneHour =  3600000;
+	private static long oneMinute = 60000;
 	private static long oneSecond = 1000;
 	
 	// time multipliers
@@ -91,7 +93,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	}// end function onCreate
 
 	/*
-     * 
+     * updates the time of the TextVew clocks in the activity
      */
 	private Runnable mUpdateTimeTask = new Runnable() {
 		@SuppressWarnings("deprecation")
@@ -117,67 +119,65 @@ public class AndroidGPSPosToTime extends Activity {// implements
 					
 					// set UTC Clock
 					date.setTime(currentTime);
-					//date.setTime(GPSTime);
-					//System.out.println("gmt "+date.toGMTString());// prints start of epoc time if there is no lock this is not good and should have something to fix this.
+									
 					
-					if (date.getSeconds() < 10) {
-						if (date.getMinutes() < 10) {
-							utcTextView.setText("" + date.getHours() + ":0"
-									+ date.getMinutes() + ".0"
-									+ date.getSeconds());
+					// if time is below 2012 odds are its null and would set to the beginning of epoch time
+					if (date.getYear() >= startingYearOfVoyage){
+								
+						//set UTC time
+						if (date.getSeconds() < 10) {
+							if (date.getMinutes() < 10) {
+								utcTextView.setText("" + date.getHours() + ":0"
+										+ date.getMinutes() + ".0"
+										+ date.getSeconds());
+							} else {
+								utcTextView.setText("" + date.getHours() + ":"
+										+ date.getMinutes() + ".0"
+										+ date.getSeconds());
+							}
 						} else {
-							utcTextView.setText("" + date.getHours() + ":"
-									+ date.getMinutes() + ".0"
-									+ date.getSeconds());
-
+							if (date.getMinutes() < 10) {
+								utcTextView.setText("" + date.getHours() + ":0"
+										+ date.getMinutes() + "."
+										+ date.getSeconds());
+							} else {
+								utcTextView.setText("" + date.getHours() + ":"
+										+ date.getMinutes() + "."
+										+ date.getSeconds());
+							}
 						}
-					} else {
-						if (date.getMinutes() < 10) {
-							utcTextView.setText("" + date.getHours() + ":0"
-									+ date.getMinutes() + "."
-									+ date.getSeconds());
-						} else {
-							utcTextView.setText("" + date.getHours() + ":"
-									+ date.getMinutes() + "."
-									+ date.getSeconds());
-
-						}
-					}
-				
-					// set boat time clock
-					long l = currentTime;
-					if (!useManualGPS){
-						l -= (((gps.getLongitude() * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
-					}else{
-						l -= (((manualLongitude * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
-					}
-					date.setTime(l);
-
-					// Set system time
-					if (date.getSeconds() < 10) {
-						if (date.getMinutes() < 10) {
-							boatTimeClockView.setText("" + date.getHours() + ":0"
-									+ date.getMinutes() + ".0" + date.getSeconds());
-						} else {
-							boatTimeClockView.setText("" + date.getHours() + ":"
-									+ date.getMinutes() + ".0" + date.getSeconds());
-						}
-					} else {
-						if (date.getMinutes() < 10) {
-							boatTimeClockView.setText("" + date.getHours() + ":0"
-									+ date.getMinutes() + "." + date.getSeconds());
-						} else {
-							boatTimeClockView.setText("" + date.getHours() + ":"
-									+ date.getMinutes() + "." + date.getSeconds());
-						}
-					}					
 					
+						// set boat time clock
+						long l = currentTime;
+						if (!useManualGPS){
+							l -= (((gps.getLongitude() * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
+						}else{
+							l -= (((manualLongitude * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
+						}
+						date.setTime(l);
+
+						// Set system time
+						if (date.getSeconds() < 10) {
+							if (date.getMinutes() < 10) {
+								boatTimeClockView.setText("" + date.getHours() + ":0"
+										+ date.getMinutes() + ".0" + date.getSeconds());
+							} else {
+								boatTimeClockView.setText("" + date.getHours() + ":"
+										+ date.getMinutes() + ".0" + date.getSeconds());
+							}
+						} else {
+							if (date.getMinutes() < 10) {
+								boatTimeClockView.setText("" + date.getHours() + ":0"
+										+ date.getMinutes() + "." + date.getSeconds());
+							} else {
+								boatTimeClockView.setText("" + date.getHours() + ":"
+										+ date.getMinutes() + "." + date.getSeconds());
+							}
+						}					
+					}
 				} else {
 					gps = new GPSTracker(AndroidGPSPosToTime.this);
 				}
-
-				
-				
 			} catch (Exception e) {
 				System.out.println(e);
 			}
@@ -189,7 +189,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	};
 
 	/*
-	 * 
+	 * Sets the system time of the Android OS
 	 */
 	private Runnable mSetSystemTime = new Runnable(){
 		
@@ -215,14 +215,19 @@ public class AndroidGPSPosToTime extends Activity {// implements
 						gps.getLocation();
 						GPSTime = gps.getGPSTime();
 						date.setTime(GPSTime);
+						
+						// if time is below 2012 odds are its null and would set to the beginning of epoch time
+						if (date.getYear() >= startingYearOfVoyage){
+							// adjust for longitude
+							long l = GPSTime;
+							l -= (((gps.getLongitude() * -1) * 4) * oneMinuteInSeconds * oneSecond);
+							date.setTime(l);
+							
+							
+							setSystemTimeFunction(l);
+						}
 	
-						// adjust for longitude
-						long l = GPSTime;
-						l -= (((gps.getLongitude() * -1) * 4) * oneMinuteInSeconds * oneSecond);
-						date.setTime(l);
 						
-						
-						setSystemTimeFunction(l);
 					} 				
 					
 				} catch (Exception e) {
@@ -240,14 +245,14 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	};
 	
 	/*
-	 * 
+	 * Just a notification to tell user they are on manual gps 
 	 */
 	public void stillUsingManualGPS(){
 		Toast.makeText(this, "Still using Manual GPS, disable to test automatic time setting", Toast.LENGTH_LONG).show();
 	}
 	
 	/*
- 	 * 
+ 	 * Records the date time of the system and the UTC time
  	 */
 	private Runnable mRecordTimeInTextTask = new Runnable() {
 		@SuppressWarnings("deprecation")
@@ -264,6 +269,8 @@ public class AndroidGPSPosToTime extends Activity {// implements
 
 					date.setTime(GPSTime);
 
+					
+					// UTC time
 					if (date.getSeconds() < 10) {
 						if (date.getMinutes() < 10) {
 							writeDate("" + date.getYear() + ", "
@@ -297,7 +304,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 					gps = new GPSTracker(AndroidGPSPosToTime.this);
 				}
 
-				long l = GPSTime;
+				long l = System.currentTimeMillis();
 				if (!useManualGPS){
 					l -= (((gps.getLongitude() * invertSign) * 4) * oneMinuteInSeconds * oneSecond);// TODO magic number
 				}else{
@@ -305,7 +312,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 				}
 				date.setTime(l);
 
-				// Set system time
+				// system time
 				if (date.getSeconds() < 10) {
 					if (date.getMinutes() < 10) {
 						writeDate("\t" + date.getYear() + ", "
@@ -391,7 +398,8 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	}// end function setSystemTimeFunction
 
 	/*
-     * 
+     * Writes the current boat time and the UTC time to a file on the sdcard
+     * @param String containing the datetimes to be saved
      */
 	@SuppressLint("SdCardPath")
 	public void writeDate(String message) {
@@ -411,6 +419,16 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	/*
 	 * 
 	 */
+	public void manualSetTime(View v){
+		Toast.makeText(this, "manualSetTime" , Toast.LENGTH_SHORT).show();
+		chmodAlarmFile();
+		mHandler.postDelayed(mSetSystemTime, oneSecond);
+		
+	}
+	
+	/*
+	 * 
+	 */
 	public void enableManualGPSEntry(View v){
 		//Toast.makeText(this, "manualGPS", Toast.LENGTH_SHORT).show();
 		if (showManualGPS){
@@ -423,16 +441,6 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		}
 	}
 	
-	
-	/*
-	 * 
-	 */
-	public void manualSetTime(View v){
-		Toast.makeText(this, "manualSetTime" , Toast.LENGTH_SHORT).show();
-		chmodAlarmFile();
-		mHandler.postDelayed(mSetSystemTime, oneSecond);
-		
-	}
 	
 	
 	/*
@@ -450,18 +458,26 @@ public class AndroidGPSPosToTime extends Activity {// implements
 			btnSetLocation.setEnabled(true);
 			btnSetLocation.setVisibility(View.VISIBLE);
 			btnSetLocation.setText("Cancel Manual GPS");
+			
+			
+			btnUseNumberPickerButton.setEnabled(false);
+			btnUseNumberPickerButton.setVisibility(View.GONE);
+			
 		}else{
 			useManualGPS = false;
 			manualGPSInUseTextView.setText("Manual GPS: Not in use");
 			btnSetLocation.setText("Enable Manual GPS");
 			showManualGPS = false;
+			
+			btnUseNumberPickerButton.setEnabled(true);
+			btnUseNumberPickerButton.setVisibility(View.VISIBLE);
 		}
 		
 		
 	}
 	
 	/*
-	 * 
+	 * Hides the widgets for entering the manual GPS position
 	 */
 	private void hideManualGPS(){
 		//
@@ -493,7 +509,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	
 	
 	/*
-	 * 
+	 * Shows the widgets for entering the manual GPS position
 	 */
 	private void showManualGps(){
 		btnSetLocation.setEnabled(true);
@@ -599,7 +615,6 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		}
 	}
 	
-	
 	// functions for application life cycle
 
 	/*
@@ -623,8 +638,8 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		super.onStart();
 		setNumberPickerForDMS();
 		// need to set this up so that it only happens once
-		mHandler.postDelayed(mRecordTimeInTextTask, oneSecond);
-		mHandler.postDelayed(mSetSystemTime, oneSecond);
+		mHandler.postDelayed(mRecordTimeInTextTask, oneMinute);
+		mHandler.postDelayed(mSetSystemTime, oneMinute);
 		
 		hideManualGPS();
 	}
