@@ -1,22 +1,32 @@
 package com.gpspositiontotime;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Date;
 
+//import android.opengl.Visibility;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.app.Dialog;
+//import android.app.DialogFragment;
+import android.app.TimePickerDialog;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.NumberPicker;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 public class AndroidGPSPosToTime extends Activity {// implements
@@ -24,6 +34,9 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	// UI widgets
 	Button btnSetLocation;
 	Button btnUseNumberPickerButton;
+	Button btnSetGPSTime;
+	Button btnChangeTime;
+	Button btnChangeDate;
 	SeekBar sbLongitudeSeekBar;
 	TextView utcTextView;
 	TextView boatTimeClockView;
@@ -37,6 +50,23 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	private boolean showManualGPS = false;
 	private boolean useManualGPS = false;
 	
+	// manual date
+	Date manualDate = new Date(System.currentTimeMillis());
+	
+	// times in milliseconds
+	//private static long twelveHours =  43200000;
+	private static long oneHour =  3600000;
+	private static long oneMinute = 60000;
+	private static long oneSecond = 1000;
+	
+	// time multipliers
+	private static int oneMinuteInSeconds = 60;
+	//private static int oneHourInSeconds = 60;
+	//private static int oneDayInHours = 24;
+
+	// other multipliers
+	private static int invertSign = -1;
+	
 	// spacetime variables
 	GPSTracker gps;
 	long GPSTime = 0;
@@ -44,20 +74,10 @@ public class AndroidGPSPosToTime extends Activity {// implements
 	long currentTime = 0; 
 	double manualLongitude;
 	private static int startingYearOfVoyage = 112; 
+	private static long minutesPerDegree = 4;// (24 hours  * 60 miuntes) / 360
+	private static long longitudeToMillisConversionFactor = minutesPerDegree * oneMinuteInSeconds * oneSecond;
 	
-	// times in milliseconds
-	private static long twelveHours =  43200000;
-	private static long oneHour =  3600000;
-	private static long oneMinute = 60000;
-	private static long oneSecond = 1000;
 	
-	// time multipliers
-	private static int oneMinuteInSeconds = 60;
-	private static int oneHourInSeconds = 60;
-	private static int oneDayInHours = 24;
-
-	// other multipliers
-	private static int invertSign = -1;
 	
 	/*
 	 * (non-Javadoc)
@@ -71,7 +91,10 @@ public class AndroidGPSPosToTime extends Activity {// implements
 
 		gps = new GPSTracker(AndroidGPSPosToTime.this);
 
+		btnSetGPSTime = (Button) findViewById(R.id.setGPSTimeButton);
 		btnSetLocation = (Button) findViewById(R.id.btnSetLocation);
+		btnChangeTime = (Button) findViewById(R.id.btnChangeTime);
+		btnChangeDate =(Button) findViewById(R.id.btnChangeDate);	
 		btnUseNumberPickerButton = (Button) findViewById(R.id.UseNumberPickerButton);
 
 		boatTimeClockView = (TextView) findViewById(R.id.boatClockTextView);
@@ -89,6 +112,14 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		seconds = (NumberPicker) findViewById(R.id.gpsSecondsNumberPicker);
 		seconds.setMaxValue(59);
 		seconds.setMinValue(0);
+		
+		//have this hidden and disabled because I ran out of time
+		btnUseNumberPickerButton.setVisibility(View.GONE);
+		btnUseNumberPickerButton.setEnabled(false);
+		
+		manualGPSInUseTextView.setVisibility(View.GONE);
+		manualGPSInUseTextView.setAlpha(0f);
+		manualGPSInUseTextView.setEnabled(false);
 
 	}// end function onCreate
 
@@ -196,6 +227,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		/*
 		 * 
 		 */
+		@SuppressWarnings("deprecation")
 		public void  run(){
 			
 			if (useManualGPS){
@@ -220,7 +252,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 						if (date.getYear() >= startingYearOfVoyage){
 							// adjust for longitude
 							long l = GPSTime;
-							l -= (((gps.getLongitude() * -1) * 4) * oneMinuteInSeconds * oneSecond);
+							l -= (((gps.getLongitude() * invertSign) * 4) * oneMinuteInSeconds * oneSecond);
 							date.setTime(l);
 							
 							
@@ -244,12 +276,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		
 	};
 	
-	/*
-	 * Just a notification to tell user they are on manual gps 
-	 */
-	public void stillUsingManualGPS(){
-		Toast.makeText(this, "Still using Manual GPS, disable to test automatic time setting", Toast.LENGTH_LONG).show();
-	}
+	
 	
 	/*
  	 * Records the date time of the system and the UTC time
@@ -351,6 +378,167 @@ public class AndroidGPSPosToTime extends Activity {// implements
 			mHandler.postDelayed(mRecordTimeInTextTask, oneHour);
 		}
 	};
+	
+	
+	@SuppressWarnings("deprecation")
+	public void onSetTimeButtonClick(View v) {
+ 
+				showDialog(1);
+	}
+	
+	@SuppressWarnings("deprecation")
+	public void onSetDateButtonClick(View v) {
+		showDialog(2);
+		
+	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case 1:
+			// set time picker as current time
+			return new TimePickerDialog(this, timePickerListener, manualDate.getHours(), manualDate.getMinutes(),false);
+		case 2:
+			return new DatePickerDialog(this, datePickerListener, manualDate.getYear(),manualDate.getMonth(),manualDate.getDate()); //TODO GET a date for this
+ 
+		}
+		return null;
+	}
+	
+	/*
+	 * Records the a manual time, date, and a time delta in a file for manual time system
+ 	 */
+	private Runnable mRecordManualTimeInTextTask = new Runnable() {
+		/*
+		 * (non-Javadoc)
+		 * Writes to file every minute, hopefully the system time changes don't
+		 * affect this...
+		 * @see java.lang.Runnable#run()
+		 */
+		public void run() {
+//			System.out.println("mRecordManualTimeInTextTask");
+//			
+//			Long dateInMillis = 0l;
+//			
+//			File manualTimeFile = new File(Environment.getExternalStorageDirectory().getPath() + "/ManualTimeFile.txt");
+//			if (!manualTimeFile.exists()){
+//				System.out.println("createing Time Delta file");
+//				writeManualDate(""+ manualDate.getTime()); 
+//			}
+//			
+//			File manualTimeDeltaFile = new File(Environment.getExternalStorageDirectory().getPath() + "/ManualTimeDeltaFile.txt");
+//			if(!manualTimeDeltaFile.exists()){
+//				System.out.println("createing Time Delta file");
+//				writeTimeDelta("0");
+//			}
+//			
+//
+//			// get the UTC time
+//			try {
+//				
+//					try {
+//						
+//						BufferedReader buf = new BufferedReader(new FileReader(Environment.getExternalStorageDirectory().getPath() + "/ManualTimeFile.txt"));
+//						
+//						// reads file and casts to a long
+//						dateInMillis = Long.parseLong(buf.readLine());
+//						
+//						
+//						buf.close();
+//					}catch(Exception e){
+//						System.out.println(e);
+//					}
+//					
+//
+//					try {
+//						//FileReader ManualTimeDeltaFileReader = new FileReader("/sdcard/ManualTimeDeltaFile.txt");
+//						BufferedReader buf = new BufferedReader(new FileReader(Environment.getExternalStorageDirectory().getPath() + "/ManualTimeDeltaFile.txt"));
+//						
+//						long timeDelta = Long.parseLong(buf.readLine());
+//						timeDelta += 1000;// TODO add final value here oneMinute
+//						String s = "" + timeDelta;
+//						System.out.println(s);
+//						
+//						if (dateInMillis != 0){
+//							dateInMillis += timeDelta;
+//							s = "" + dateInMillis;
+//							writeTimeDelta("1000");
+//						}else {
+//							timeDeltaError();
+//						}
+//						
+//						buf.close();
+//					}catch(Exception e){
+//						System.out.println(e);
+//					}
+//				
+//			} catch (Exception e) {
+//				System.out.println(e);
+//			}
+//			System.out.println("here");
+//			// TODO Testing
+//			mHandler.postDelayed(mRecordTimeInTextTask, oneSecond);
+		}
+	};
+	
+	private TimePickerDialog.OnTimeSetListener timePickerListener = new TimePickerDialog.OnTimeSetListener() {
+		@SuppressWarnings("deprecation")
+		public void onTimeSet(TimePicker view, int selectedHour, int selectedMinute) {
+			manualDate.setHours(selectedHour);
+			manualDate.setMinutes(selectedMinute);
+		}
+	};
+	
+
+	private DatePickerDialog.OnDateSetListener datePickerListener = new DatePickerDialog.OnDateSetListener() {
+		
+		// when dialog box is closed, below method will be called.
+		@SuppressWarnings("deprecation")
+		public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
+			manualDate.setYear(selectedYear);
+			manualDate.setMonth(selectedMonth);
+			manualDate.setDate(selectedDay);
+		}
+	};
+	
+	 /* Writes the current boat time and the UTC time to a file on the sdcard
+     * @param String containing the datetime to be saved
+     */
+	@SuppressLint("SdCardPath")
+	public void writeManualDate(String message) {
+//		System.out.println("writeManualdate");
+//		
+//		FileWriter fw;
+//		try {
+//			fw = new FileWriter("/sdcard/manualTimeFile.txt", false);
+//			fw.write(message);
+//			fw.flush();
+//			fw.close();
+//		} catch (IOException e1) {
+//			e1.printStackTrace();
+//		}
+
+	}
+	
+	 /* Writes the current boat time and the UTC time to a file on the sdcard
+     * @param String containing the time Delta to be saved
+     */
+	@SuppressLint("SdCardPath")
+	public void writeTimeDelta(String message) {
+//		System.out.println("writeTimeDelta");
+//		
+//		FileWriter fw;
+//		try {
+//			fw = new FileWriter("/sdcard/manualTimeDeltaFile.txt", false);
+//			fw.write(message);
+//			fw.flush();
+//			fw.close();
+//		} catch (IOException e1) {
+//			e1.printStackTrace();
+//		}
+	}
+
 
 	/*
 	 * Sets the values for the degrees minutes and second number pickers if the
@@ -451,7 +639,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		
 		hideManualGPS();
 		
-		if (!useManualGPS){
+		if (!useManualGPS){ // as in you were using device gps > sets to manual gps
 			useManualGPS = true;
 			manualGPSInUseTextView.setText("Manual GPS: Enabled");
 			Toast.makeText(this, "Using Manual GPS ", Toast.LENGTH_LONG).show();
@@ -463,7 +651,9 @@ public class AndroidGPSPosToTime extends Activity {// implements
 			btnUseNumberPickerButton.setEnabled(false);
 			btnUseNumberPickerButton.setVisibility(View.GONE);
 			
-		}else{
+			mHandler.postDelayed(mRecordManualTimeInTextTask, oneSecond);
+			
+		}else{ // as in you have been using manual gps > sets to device gps
 			useManualGPS = false;
 			manualGPSInUseTextView.setText("Manual GPS: Not in use");
 			btnSetLocation.setText("Enable Manual GPS");
@@ -471,6 +661,8 @@ public class AndroidGPSPosToTime extends Activity {// implements
 			
 			btnUseNumberPickerButton.setEnabled(true);
 			btnUseNumberPickerButton.setVisibility(View.VISIBLE);
+			
+			mHandler.removeCallbacks(mRecordManualTimeInTextTask);
 		}
 		
 		
@@ -505,6 +697,14 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		
 		//manual GPS in use TextView
 		findViewById(R.id.manualGPSInUseTextView).setVisibility(View.VISIBLE);
+		
+		btnSetGPSTime.setVisibility(View.VISIBLE);
+		
+		btnChangeTime.setVisibility(View.GONE);
+		btnChangeDate.setVisibility(View.GONE);
+		
+		btnChangeTime.setEnabled(false);
+		btnChangeDate.setEnabled(false);
 	}
 	
 	
@@ -536,6 +736,12 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		//manual GPS in use TextView
 		findViewById(R.id.manualGPSInUseTextView).setVisibility(View.GONE);
 		
+		btnSetGPSTime.setVisibility(View.GONE);
+		
+		btnChangeTime.setVisibility(View.VISIBLE);
+		btnChangeDate.setVisibility(View.VISIBLE);
+		btnChangeTime.setEnabled(true);
+		btnChangeDate.setEnabled(true);
 	}
 	
 	//
@@ -642,6 +848,7 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		mHandler.postDelayed(mSetSystemTime, oneMinute);
 		
 		hideManualGPS();
+		
 	}
 
 	/*
@@ -701,6 +908,18 @@ public class AndroidGPSPosToTime extends Activity {// implements
 		hideManualGPS();
 	}
 
+	// messages from runnables 
+	private void timeDeltaError(){
+		Toast.makeText(this, "time Delta Error" , Toast.LENGTH_LONG).show();
+	}
+	
+	/*
+	 * Just a notification to tell user they are on manual gps 
+	 */
+	public void stillUsingManualGPS(){
+		Toast.makeText(this, "Still using Manual GPS, disable to test automatic time setting", Toast.LENGTH_LONG).show();
+	}
+	
 }
 
 

@@ -35,13 +35,6 @@
         android:layout_alignParentRight="true"
         android:text="@string/utc_clock" />
 
-    <NumberPicker
-        android:id="@+id/gpsMinutesNumberPicker"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/gpsDegreesNumberPicker"
-        android:layout_toLeftOf="@+id/gpsSecondsNumberPicker" />
-
     <TextView
         android:id="@+id/degreeTextView"
         android:layout_width="wrap_content"
@@ -61,30 +54,13 @@
         android:text="@string/set_location" />
 
     <Button
-        android:id="@+id/UseNumberPickerButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/setTimeButton"
-        android:layout_marginTop="24dp"
-        android:onClick="enableManualGPSEntry"
-        android:text="@string/manual_gps" />
-
-    <NumberPicker
-        android:id="@+id/gpsSecondsNumberPicker"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/btnSetLocation"
-        android:layout_alignParentRight="true" />
-
-    <Button
-        android:id="@+id/setTimeButton"
+        android:id="@+id/setGPSTimeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/boatTimeTextView"
         android:onClick="manualSetTime"
-        android:text="@string/set_time_button_text" />
+        android:text="@string/set_gps_time_button_text" />
 
     <TextView
         android:id="@+id/boatClockTextView"
@@ -118,5 +94,48 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/gpsDegreesNumberPicker"
         android:text="@string/manual_gps_on_off_text_view" />
+
+    <NumberPicker
+        android:id="@+id/gpsMinutesNumberPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/UseNumberPickerButton"
+        android:layout_toRightOf="@+id/gpsDegreesNumberPicker"
+    	android:layout_marginTop="45dp" />
+
+    <NumberPicker
+        android:id="@+id/gpsSecondsNumberPicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/UseNumberPickerButton"
+        android:layout_toRightOf="@+id/gpsMinutesNumberPicker" 
+        android:layout_marginTop="45dp" />
+
+    <Button
+        android:id="@+id/btnChangeTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/btnChangeDate"
+        android:layout_alignTop="@+id/gpsSecondsNumberPicker"
+        android:onClick="onSetTimeButtonClick"
+        android:text="@string/set_time_button_text" />
+
+    <Button
+        android:id="@+id/btnChangeDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/btnChangeTime"
+        android:onClick="onSetDateButtonClick"
+        android:text="@string/set_date_button_text" />
+
+    <Button
+        android:id="@+id/UseNumberPickerButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/setGPSTimeButton"
+        android:onClick="enableManualGPSEntry"
+        android:text="@string/manual_gps" />
 
 </RelativeLayout>

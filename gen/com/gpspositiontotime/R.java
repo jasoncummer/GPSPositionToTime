@@ -19,16 +19,18 @@ public final class R {
         public static final int boatClockTextView=0x7f07000b;
         public static final int boatTimeTextView=0x7f07000a;
         public static final int boat_clock_textView=0x7f07000c;
+        public static final int btnChangeDate=0x7f07000f;
+        public static final int btnChangeTime=0x7f07000e;
         public static final int btnSetLocation=0x7f070008;
         public static final int degreeTextView=0x7f070007;
         public static final int gpsDegreesNumberPicker=0x7f070004;
         public static final int gpsMinutesNumberPicker=0x7f070003;
         public static final int gpsSecondsNumberPicker=0x7f070001;
         public static final int manualGPSInUseTextView=0x7f07000d;
-        public static final int menu_settings=0x7f07000e;
+        public static final int menu_settings=0x7f070010;
         public static final int minutesTextView=0x7f070002;
         public static final int secondsTextView=0x7f070000;
-        public static final int setTimeButton=0x7f070009;
+        public static final int setGPSTimeButton=0x7f070009;
         public static final int utc_clock_textView=0x7f070006;
     }
     public static final class layout {
@@ -47,6 +49,8 @@ public final class R {
         public static final int menu_settings=0x7f040001;
         public static final int minutes_text_view=0x7f04000b;
         public static final int seconds_text_view=0x7f04000c;
+        public static final int set_date_button_text=0x7f04000f;
+        public static final int set_gps_time_button_text=0x7f040010;
         public static final int set_location=0x7f040003;
         public static final int set_time_button_text=0x7f04000d;
         public static final int title_activity_android_gpspos_to_time=0x7f040002;
